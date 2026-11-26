@@ -7,12 +7,11 @@ import { PageHeader } from '@/components/edulytics/page-header';
 import { ContentCard } from '@/components/edulytics/content-card';
 import { QuestionFilters, QuestionFilterValues } from '@/components/edulytics/question-filters';
 import { LeftFilterRail } from '@/components/edulytics/left-filter-rail';
+import { QuestionDetailDrawer } from '@/components/edulytics/question-detail-drawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
-import { Question } from '@/lib/types';
+import { Question, QuestionSolution } from '@/lib/types';
 import dynamic from 'next/dynamic';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
@@ -36,6 +35,7 @@ export default function QuestionsPage() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [leftRailOpen, setLeftRailOpen] = useState(true);
   const [defaultFilters, setDefaultFilters] = useState<DefaultFilters | null>(null);
+  const [questionSolutions, setQuestionSolutions] = useState<Record<string, QuestionSolution[]>>({});
 
   // Load default filters on mount
   useEffect(() => {
@@ -89,6 +89,29 @@ export default function QuestionsPage() {
     }
   };
 
+  const loadSolutionsForQuestions = async (questionsToLoad: Question[]) => {
+    const solutionsMap: Record<string, QuestionSolution[]> = {};
+    await Promise.all(
+      questionsToLoad.map(async (q) => {
+        try {
+          const response = await fetch(`/api/solutions?questionId=${q._id.toString()}`);
+          const data = await response.json();
+          solutionsMap[q._id.toString()] = data.solutions || [];
+        } catch (error) {
+          console.error(`Error loading solutions for question ${q._id}:`, error);
+        }
+      })
+    );
+    setQuestionSolutions(solutionsMap);
+  };
+
+  // Reload solutions when showAnswers toggles
+  useEffect(() => {
+    if (showAnswers && questions.length > 0 && Object.keys(questionSolutions).length === 0) {
+      loadSolutionsForQuestions(questions);
+    }
+  }, [showAnswers]);
+
   const loadQuestions = async () => {
     setLoading(true);
     try {
@@ -107,6 +130,11 @@ export default function QuestionsPage() {
       const data = await response.json();
       setQuestions(data.questions || []);
       setTotal(data.total || 0);
+
+      // Load solutions for all questions if showAnswers is enabled
+      if (showAnswers && data.questions) {
+        loadSolutionsForQuestions(data.questions);
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
     } finally {
@@ -267,6 +295,49 @@ export default function QuestionsPage() {
                   {renderMarkdown(question.stem)}
                 </div>
 
+                {/* Show Answers inline for MCQ */}
+                {showAnswers && question.type === 'mcq' && question.options && (
+                  <div className={`mb-3 text-xs ${question.language === 'bn' ? 'font-bengali' : ''}`}>
+                    {(() => {
+                      const solutions = questionSolutions[question._id.toString()] || [];
+                      const mcqSolution = solutions.find(s => s.partKey === 'main');
+                      const correctKeys = mcqSolution?.answer && 
+                        typeof mcqSolution.answer === 'object' &&
+                        'correctOptionKeys' in mcqSolution.answer
+                        ? mcqSolution.answer.correctOptionKeys
+                        : [];
+                      
+                      return correctKeys && correctKeys.length > 0 ? (
+                        <div className="p-2 bg-green-50 border border-green-300 rounded">
+                          <span className="font-semibold text-green-700">Answer: </span>
+                          <span className="text-green-600">{correctKeys.join(', ')}</span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+
+                {/* Show Answers inline for Short Answer */}
+                {showAnswers && (question.type === 'sq' || question.type === 'short') && (
+                  <div className={`mb-3 text-xs ${question.language === 'bn' ? 'font-bengali' : ''}`}>
+                    {(() => {
+                      const solutions = questionSolutions[question._id.toString()] || [];
+                      const mainSolution = solutions.find(s => s.partKey === 'main');
+                      
+                      return mainSolution?.answer ? (
+                        <div className="p-2 bg-blue-50 border border-blue-300 rounded">
+                          <span className="font-semibold text-blue-700">Answer: </span>
+                          <span className="text-blue-600">
+                            {typeof mainSolution.answer === 'string' 
+                              ? mainSolution.answer 
+                              : JSON.stringify(mainSolution.answer)}
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+
                 {/* Stats */}
                 <div className="flex gap-2 mb-3 mt-auto">
                   {question.marks && (
@@ -336,63 +407,15 @@ export default function QuestionsPage() {
         </>
       )}
 
-          {/* Detail Dialog */}
-          <Dialog open={!!selectedQuestion} onOpenChange={() => setSelectedQuestion(null)}>
-            <DialogContent className="max-w-3xl max-h-[80vh]">
-              <DialogHeader>
-                <DialogTitle>Question Details</DialogTitle>
-              </DialogHeader>
-              <ScrollArea className="max-h-[60vh]">
-                {selectedQuestion && (
-                  <div className="space-y-4 p-4">
-                    <div className="flex gap-2">
-                      <Badge variant="outline">{selectedQuestion.type.toUpperCase()}</Badge>
-                      {selectedQuestion.difficulty && (
-                        <Badge className={getDifficultyColor(selectedQuestion.difficulty)}>
-                          {selectedQuestion.difficulty}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                      <p className="font-semibold mb-2 text-sm">Question:</p>
-                      <p className="text-sm">{renderMarkdown(selectedQuestion.stem)}</p>
-                    </div>
-                    {selectedQuestion.options && selectedQuestion.options.length > 0 && (
-                      <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                        <p className="font-semibold mb-2 text-sm">Options:</p>
-                        <div className="space-y-1">
-                          {selectedQuestion.options.map((opt) => (
-                            <div key={opt.key} className="flex gap-2 text-sm">
-                              <span className="font-semibold">{opt.key}.</span>
-                              <span>{renderMarkdown(opt.text)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {selectedQuestion.parts && selectedQuestion.parts.length > 0 && (
-                      <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                        <p className="font-semibold mb-2 text-sm">Parts:</p>
-                        <div className="space-y-2">
-                          {selectedQuestion.parts.map((part) => (
-                            <div key={part.key} className="text-sm">
-                              <span className="font-semibold">{part.key}. </span>
-                              <span>{renderMarkdown(part.prompt)}</span>
-                              {part.marks && (
-                                <span className="text-xs text-edulytics-muted ml-2">
-                                  ({part.marks} marks)
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
+          {/* Detail Drawer */}
+          <QuestionDetailDrawer
+            question={selectedQuestion}
+            onClose={() => setSelectedQuestion(null)}
+            onEdit={(q) => {
+              console.log('Edit question:', q);
+              // Will implement in STEP C
+            }}
+          />
         </div>
       </div>
     </AppShell>
