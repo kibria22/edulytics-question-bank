@@ -2,23 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/edulytics/page-header';
+import { FilterBar } from '@/components/edulytics/filter-bar';
+import { ContentCard } from '@/components/edulytics/content-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Eye } from 'lucide-react';
+import { Loader2, Search, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
 import { Question } from '@/lib/types';
 import dynamic from 'next/dynamic';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
-const BlockMath = dynamic(() => import('react-katex').then(mod => mod.BlockMath), { ssr: false });
 
 export default function QuestionsPage() {
-  const [language, setLanguage] = useState<'bn' | 'en'>('bn');
-  const [aiConfigured, setAiConfigured] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -29,19 +28,8 @@ export default function QuestionsPage() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    checkAIConfig();
     loadQuestions();
   }, [page, typeFilter, difficultyFilter]);
-
-  const checkAIConfig = async () => {
-    try {
-      const response = await fetch('/api/ai/check');
-      const data = await response.json();
-      setAiConfigured(data.configured);
-    } catch (error) {
-      console.error('AI config check error:', error);
-    }
-  };
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -76,164 +64,180 @@ export default function QuestionsPage() {
     });
   };
 
+  const getDifficultyColor = (difficulty?: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-700 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'hard': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   return (
-    <AppShell language={language} onLanguageChange={setLanguage} aiConfigured={aiConfigured}>
-      <div className="p-8 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Question Bank</h1>
-          <p className="text-muted-foreground mt-1">
-            Browse and search questions with filters
-          </p>
+    <AppShell>
+      <PageHeader
+        title="Question Bank"
+        description="View and manage all questions offered across this school"
+        action={
+          <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Question
+          </Button>
+        }
+      />
+
+      <FilterBar>
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-edulytics-muted" />
+          <Input
+            placeholder="Search by question text..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && loadQuestions()}
+            className="pl-9 h-9 text-sm border-edulytics-border"
+          />
         </div>
+        
+        <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
+          <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
+            <SelectValue placeholder="Question Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="mcq">MCQ</SelectItem>
+            <SelectItem value="cq">CQ</SelectItem>
+            <SelectItem value="sq">SQ</SelectItem>
+            <SelectItem value="tf">True/False</SelectItem>
+            <SelectItem value="short">Short</SelectItem>
+            <SelectItem value="long">Long</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search questions..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && loadQuestions()}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Question Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="mcq">MCQ</SelectItem>
-                  <SelectItem value="cq">CQ</SelectItem>
-                  <SelectItem value="sq">SQ</SelectItem>
-                  <SelectItem value="tf">True/False</SelectItem>
-                  <SelectItem value="short">Short</SelectItem>
-                  <SelectItem value="long">Long</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={difficultyFilter} onValueChange={(val) => val && setDifficultyFilter(val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Difficulties</SelectItem>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={loadQuestions} className="w-full md:w-auto">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-          </CardContent>
-        </Card>
+        <Select value={difficultyFilter} onValueChange={(val) => val && setDifficultyFilter(val)}>
+          <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
+            <SelectValue placeholder="Difficulty" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Difficulties</SelectItem>
+            <SelectItem value="easy">Easy</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="hard">Hard</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
-        {/* Results */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>
-                Questions ({total})
-              </CardTitle>
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {Math.ceil(total / 20)}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : questions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No questions found
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {questions.map((question) => (
-                  <Card key={question._id.toString()} className="hover:border-primary/50 transition-colors">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{question.type.toUpperCase()}</Badge>
-                            {question.difficulty && (
-                              <Badge
-                                variant={
-                                  question.difficulty === 'easy'
-                                    ? 'default'
-                                    : question.difficulty === 'medium'
-                                    ? 'secondary'
-                                    : 'destructive'
-                                }
-                              >
-                                {question.difficulty}
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="font-bengali">
-                              {question.language === 'bn' ? 'বাংলা' : 'English'}
-                            </Badge>
-                          </div>
-                          <div className={question.language === 'bn' ? 'font-bengali' : ''}>
-                            {renderMarkdown(question.stem)}
-                          </div>
-                          {question.marks && (
-                            <div className="text-sm text-muted-foreground">
-                              Marks: {question.marks}
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedQuestion(question)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-edulytics-primary" />
+        </div>
+      ) : questions.length === 0 ? (
+        <ContentCard>
+          <div className="text-center py-12 text-edulytics-muted">
+            <BookOpen className="h-12 w-12 mx-auto mb-3 text-edulytics-muted/50" />
+            <p className="text-sm">No questions found</p>
+          </div>
+        </ContentCard>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {questions.map((question) => (
+              <ContentCard key={question._id.toString()} className="flex flex-col">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-edulytics-text">
+                        {question.type.toUpperCase()}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {!loading && questions.length > 0 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <div className="text-sm text-muted-foreground px-4">
-                  Page {page}
+                      <div className="text-xs text-edulytics-muted uppercase">
+                        {question.language === 'bn' ? 'BANGLA' : 'ENGLISH'}
+                      </div>
+                    </div>
+                  </div>
+                  <button className="text-edulytics-muted hover:text-edulytics-text">
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
                 </div>
+
+                {/* Tags */}
+                {question.difficulty && (
+                  <Badge className={`text-xs mb-3 w-fit ${getDifficultyColor(question.difficulty)}`}>
+                    {question.difficulty}
+                  </Badge>
+                )}
+
+                {/* Question Stem */}
+                <div className={`text-sm text-edulytics-text mb-3 line-clamp-3 ${question.language === 'bn' ? 'font-bengali' : ''}`}>
+                  {renderMarkdown(question.stem)}
+                </div>
+
+                {/* Stats */}
+                <div className="flex gap-2 mb-3 mt-auto">
+                  {question.marks && (
+                    <div className="flex-1 bg-purple-50 border border-purple-200 rounded p-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-purple-600">{question.marks}</span>
+                        </div>
+                        <span className="text-xs text-edulytics-muted">Marks</span>
+                      </div>
+                    </div>
+                  )}
+                  {question.options && (
+                    <div className="flex-1 bg-blue-50 border border-blue-200 rounded p-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-blue-600">{question.options.length}</span>
+                        </div>
+                        <span className="text-xs text-edulytics-muted">Options</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* View Details Button */}
                 <Button
                   variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= Math.ceil(total / 20)}
+                  size="sm"
+                  className="w-full border-edulytics-primary/20 bg-edulytics-primary-light hover:bg-edulytics-primary-light/80 text-edulytics-primary text-xs"
+                  onClick={() => setSelectedQuestion(question)}
                 >
-                  Next
+                  <Eye className="h-3 w-3 mr-1.5" />
+                  View Details
                 </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </ContentCard>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="border-edulytics-border"
+            >
+              Previous
+            </Button>
+            <div className="text-sm text-edulytics-muted px-4">
+              Page {page} of {Math.ceil(total / 20)}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= Math.ceil(total / 20)}
+              className="border-edulytics-border"
+            >
+              Next
+            </Button>
+          </div>
+        </>
+      )}
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedQuestion} onOpenChange={() => setSelectedQuestion(null)}>
@@ -247,19 +251,21 @@ export default function QuestionsPage() {
                 <div className="flex gap-2">
                   <Badge variant="outline">{selectedQuestion.type.toUpperCase()}</Badge>
                   {selectedQuestion.difficulty && (
-                    <Badge>{selectedQuestion.difficulty}</Badge>
+                    <Badge className={getDifficultyColor(selectedQuestion.difficulty)}>
+                      {selectedQuestion.difficulty}
+                    </Badge>
                   )}
                 </div>
                 <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                  <p className="font-semibold mb-2">Question:</p>
-                  <p>{renderMarkdown(selectedQuestion.stem)}</p>
+                  <p className="font-semibold mb-2 text-sm">Question:</p>
+                  <p className="text-sm">{renderMarkdown(selectedQuestion.stem)}</p>
                 </div>
                 {selectedQuestion.options && selectedQuestion.options.length > 0 && (
                   <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                    <p className="font-semibold mb-2">Options:</p>
+                    <p className="font-semibold mb-2 text-sm">Options:</p>
                     <div className="space-y-1">
                       {selectedQuestion.options.map((opt) => (
-                        <div key={opt.key} className="flex gap-2">
+                        <div key={opt.key} className="flex gap-2 text-sm">
                           <span className="font-semibold">{opt.key}.</span>
                           <span>{renderMarkdown(opt.text)}</span>
                         </div>
@@ -269,14 +275,14 @@ export default function QuestionsPage() {
                 )}
                 {selectedQuestion.parts && selectedQuestion.parts.length > 0 && (
                   <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                    <p className="font-semibold mb-2">Parts:</p>
+                    <p className="font-semibold mb-2 text-sm">Parts:</p>
                     <div className="space-y-2">
                       {selectedQuestion.parts.map((part) => (
-                        <div key={part.key}>
+                        <div key={part.key} className="text-sm">
                           <span className="font-semibold">{part.key}. </span>
                           <span>{renderMarkdown(part.prompt)}</span>
                           {part.marks && (
-                            <span className="text-sm text-muted-foreground ml-2">
+                            <span className="text-xs text-edulytics-muted ml-2">
                               ({part.marks} marks)
                             </span>
                           )}

@@ -2,32 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/edulytics/page-header';
+import { ContentCard } from '@/components/edulytics/content-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Library, Plus, Loader2 } from 'lucide-react';
+import { Library, Plus, Loader2, MoreVertical, BookOpen } from 'lucide-react';
 import { QuestionSourceDoc } from '@/lib/types';
 
 export default function SourcesPage() {
-  const [language, setLanguage] = useState<'bn' | 'en'>('bn');
-  const [aiConfigured, setAiConfigured] = useState(false);
   const [sources, setSources] = useState<QuestionSourceDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAIConfig();
     loadSources();
   }, []);
-
-  const checkAIConfig = async () => {
-    try {
-      const response = await fetch('/api/ai/check');
-      const data = await response.json();
-      setAiConfigured(data.configured);
-    } catch (error) {
-      console.error('AI config check error:', error);
-    }
-  };
 
   const loadSources = async () => {
     setLoading(true);
@@ -43,62 +31,93 @@ export default function SourcesPage() {
   };
 
   return (
-    <AppShell language={language} onLanguageChange={setLanguage} aiConfigured={aiConfigured}>
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Library className="h-8 w-8 text-primary" />
-              Question Sources
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage textbooks, exams, and other question sources
-            </p>
-          </div>
-          <Button>
+    <AppShell>
+      <PageHeader
+        title="Question Sources"
+        description="Manage textbooks, exams, and other question sources"
+        action={
+          <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
             <Plus className="h-4 w-4 mr-2" />
             Add Source
           </Button>
-        </div>
+        }
+      />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-edulytics-primary" />
+        </div>
+      ) : sources.length === 0 ? (
+        <ContentCard>
+          <div className="text-center py-12 text-edulytics-muted">
+            <Library className="h-12 w-12 mx-auto mb-3 text-edulytics-muted/50" />
+            <p className="text-sm">No sources found</p>
           </div>
-        ) : sources.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              No sources found
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sources.map((source) => (
-              <Card key={source._id.toString()} className="hover:border-primary/50 transition-colors">
-                <CardHeader>
-                  <CardTitle className={`text-lg ${language === 'bn' ? 'font-bengali' : ''}`}>
-                    {source.name[language]}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">{source.type}</Badge>
-                    {source.year && <Badge variant="secondary">{source.year}</Badge>}
-                    <Badge variant={source.isActive ? 'default' : 'secondary'}>
-                      {source.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+        </ContentCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sources.map((source) => (
+            <ContentCard key={source._id.toString()} className="flex flex-col">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-purple-600" />
                   </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <div>Key: {source.sourceKey}</div>
-                    {source.country && <div>Country: {source.country}</div>}
-                    {source.publisher && <div>Publisher: {source.publisher}</div>}
+                  <div>
+                    <div className="font-bold text-sm text-edulytics-text font-bengali">
+                      {source.name.bn}
+                    </div>
+                    <div className="text-xs text-edulytics-muted uppercase">
+                      {source.sourceKey}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                </div>
+                <button className="text-edulytics-muted hover:text-edulytics-text">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                  {source.type}
+                </Badge>
+                {source.year && (
+                  <Badge variant="outline" className="text-xs border-edulytics-border">
+                    {source.year}
+                  </Badge>
+                )}
+                <Badge
+                  className={`text-xs ${
+                    source.isActive
+                      ? 'bg-green-100 text-green-700 border-green-200'
+                      : 'bg-gray-100 text-gray-700 border-gray-200'
+                  }`}
+                >
+                  {source.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              {/* Details */}
+              <div className="text-xs text-edulytics-muted space-y-1 mb-4">
+                {source.country && <div>Country: {source.country}</div>}
+                {source.publisher && <div>Publisher: {source.publisher}</div>}
+              </div>
+
+              {/* View Details Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-edulytics-primary/20 bg-edulytics-primary-light hover:bg-edulytics-primary-light/80 text-edulytics-primary text-xs mt-auto"
+              >
+                <Library className="h-3 w-3 mr-1.5" />
+                View Details
+              </Button>
+            </ContentCard>
+          ))}
+        </div>
+      )}
     </AppShell>
   );
 }
