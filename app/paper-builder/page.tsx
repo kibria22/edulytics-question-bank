@@ -86,16 +86,43 @@ export default function PaperBuilderPage() {
   const [config, setConfig] = useState<PaperConfig>(getInitialConfig('bn'));
 
   const [generating, setGenerating] = useState(false);
+  const [defaultsLoaded, setDefaultsLoaded] = useState(false);
+
+  // Load default filters on mount
+  useEffect(() => {
+    loadDefaultFilters();
+  }, []);
+
+  const loadDefaultFilters = async () => {
+    try {
+      const response = await fetch('/api/curriculum/resolve-defaults');
+      const data = await response.json();
+      if (response.ok) {
+        setConfig(prev => ({
+          ...prev,
+          boardId: data.boardId,
+          classId: data.levelId,
+          groupId: data.groupId,
+          subjectId: data.subjectId,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading default filters:', error);
+    } finally {
+      setDefaultsLoaded(true);
+    }
+  };
 
   // Auto-generate on mount if no questions exist
   useEffect(() => {
+    if (!defaultsLoaded) return;
     const hasQuestions = config.sections.some(s => s.questions.length > 0);
     if (!hasQuestions && config.sections.length > 0) {
       // Small delay to ensure component is mounted
       setTimeout(() => handleGenerate(), 1000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultsLoaded]);
 
   const handleGenerate = async () => {
     setGenerating(true);

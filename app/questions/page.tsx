@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/edulytics/page-header';
 import { ContentCard } from '@/components/edulytics/content-card';
 import { QuestionFilters, QuestionFilterValues } from '@/components/edulytics/question-filters';
+import { LeftFilterRail } from '@/components/edulytics/left-filter-rail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,7 +17,16 @@ import dynamic from 'next/dynamic';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
 
+interface DefaultFilters {
+  boardId: string;
+  levelId: string;
+  groupId: string;
+  subjectId: string;
+}
+
 export default function QuestionsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterValues, setFilterValues] = useState<QuestionFilterValues>({});
@@ -23,10 +34,60 @@ export default function QuestionsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showAnswers, setShowAnswers] = useState(false);
+  const [leftRailOpen, setLeftRailOpen] = useState(true);
+  const [defaultFilters, setDefaultFilters] = useState<DefaultFilters | null>(null);
+
+  // Load default filters on mount
+  useEffect(() => {
+    loadDefaultFilters();
+  }, []);
+
+  // Initialize filters from URL or defaults
+  useEffect(() => {
+    if (!defaultFilters) return;
+
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams) {
+      // No URL params, apply defaults
+      setFilterValues({
+        boardId: defaultFilters.boardId,
+        levelId: defaultFilters.levelId,
+        groupId: defaultFilters.groupId,
+        subjectId: defaultFilters.subjectId,
+      });
+    } else {
+      // Load from URL
+      const filters: QuestionFilterValues = {};
+      searchParams.forEach((value, key) => {
+        filters[key as keyof QuestionFilterValues] = value;
+      });
+      setFilterValues(filters);
+    }
+  }, [defaultFilters, searchParams]);
 
   useEffect(() => {
-    loadQuestions();
-  }, [page]);
+    if (Object.keys(filterValues).length > 0) {
+      loadQuestions();
+    }
+  }, [page, filterValues]);
+
+  const loadDefaultFilters = async () => {
+    try {
+      const response = await fetch('/api/curriculum/resolve-defaults');
+      const data = await response.json();
+      if (response.ok) {
+        setDefaultFilters({
+          boardId: data.boardId,
+          levelId: data.levelId,
+          groupId: data.groupId,
+          subjectId: data.subjectId,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading default filters:', error);
+    }
+  };
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -55,7 +116,26 @@ export default function QuestionsPage() {
 
   const handleSearch = () => {
     setPage(1);
+    updateUrlParams(filterValues);
     loadQuestions();
+  };
+
+  const updateUrlParams = (filters: QuestionFilterValues) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, String(v)));
+        } else {
+          params.append(key, String(value));
+        }
+      }
+    });
+    router.push(`/questions?${params.toString()}`, { scroll: false });
+  };
+
+  const handleFilterChange = (newFilters: QuestionFilterValues) => {
+    setFilterValues(newFilters);
   };
 
   const renderMarkdown = (text: string) => {
@@ -80,33 +160,64 @@ export default function QuestionsPage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title="Question Bank"
-        description="View and manage all questions offered across this school"
-        action={
-          <div className="flex gap-2">
-            <Button
-              variant={showAnswers ? "default" : "outline"}
-              onClick={() => setShowAnswers(!showAnswers)}
-              className={showAnswers ? "bg-green-600 hover:bg-green-700" : ""}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              {showAnswers ? "Hide Answers" : "Show Answers"}
-            </Button>
-            <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Question
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex gap-0 h-full">
+        <LeftFilterRail
+          values={{
+            boardIds: filterValues.boardId ? [filterValues.boardId] : [],
+            classId: filterValues.levelId,
+            groupId: filterValues.groupId,
+            subjectId: filterValues.subjectId,
+            topicIds: filterValues.topicId ? [filterValues.topicId] : [],
+            type: filterValues.type,
+            language: filterValues.language,
+            hasSolution: filterValues.hasSolution,
+          }}
+          onChange={(railValues) => {
+            handleFilterChange({
+              ...filterValues,
+              boardId: railValues.boardIds?.[0],
+              levelId: railValues.classId,
+              groupId: railValues.groupId,
+              subjectId: railValues.subjectId,
+              topicId: railValues.topicIds?.[0],
+              type: railValues.type,
+              language: railValues.language,
+              hasSolution: railValues.hasSolution,
+            });
+          }}
+          onSearch={handleSearch}
+          isOpen={leftRailOpen}
+          onToggle={() => setLeftRailOpen(!leftRailOpen)}
+        />
 
-      <QuestionFilters
-        values={filterValues}
-        onChange={setFilterValues}
-        onSearch={handleSearch}
-        resultCount={total}
-      />
+        <div className="flex-1 overflow-y-auto">
+          <PageHeader
+            title="Question Bank"
+            description="View and manage all questions offered across this school"
+            action={
+              <div className="flex gap-2">
+                <Button
+                  variant={showAnswers ? "default" : "outline"}
+                  onClick={() => setShowAnswers(!showAnswers)}
+                  className={showAnswers ? "bg-green-600 hover:bg-green-700" : ""}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  {showAnswers ? "Hide Answers" : "Show Answers"}
+                </Button>
+                <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Question
+                </Button>
+              </div>
+            }
+          />
+
+          <QuestionFilters
+            values={filterValues}
+            onChange={handleFilterChange}
+            onSearch={handleSearch}
+            resultCount={total}
+          />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -225,63 +336,65 @@ export default function QuestionsPage() {
         </>
       )}
 
-      {/* Detail Dialog */}
-      <Dialog open={!!selectedQuestion} onOpenChange={() => setSelectedQuestion(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Question Details</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            {selectedQuestion && (
-              <div className="space-y-4 p-4">
-                <div className="flex gap-2">
-                  <Badge variant="outline">{selectedQuestion.type.toUpperCase()}</Badge>
-                  {selectedQuestion.difficulty && (
-                    <Badge className={getDifficultyColor(selectedQuestion.difficulty)}>
-                      {selectedQuestion.difficulty}
-                    </Badge>
-                  )}
-                </div>
-                <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                  <p className="font-semibold mb-2 text-sm">Question:</p>
-                  <p className="text-sm">{renderMarkdown(selectedQuestion.stem)}</p>
-                </div>
-                {selectedQuestion.options && selectedQuestion.options.length > 0 && (
-                  <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                    <p className="font-semibold mb-2 text-sm">Options:</p>
-                    <div className="space-y-1">
-                      {selectedQuestion.options.map((opt) => (
-                        <div key={opt.key} className="flex gap-2 text-sm">
-                          <span className="font-semibold">{opt.key}.</span>
-                          <span>{renderMarkdown(opt.text)}</span>
-                        </div>
-                      ))}
+          {/* Detail Dialog */}
+          <Dialog open={!!selectedQuestion} onOpenChange={() => setSelectedQuestion(null)}>
+            <DialogContent className="max-w-3xl max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle>Question Details</DialogTitle>
+              </DialogHeader>
+              <ScrollArea className="max-h-[60vh]">
+                {selectedQuestion && (
+                  <div className="space-y-4 p-4">
+                    <div className="flex gap-2">
+                      <Badge variant="outline">{selectedQuestion.type.toUpperCase()}</Badge>
+                      {selectedQuestion.difficulty && (
+                        <Badge className={getDifficultyColor(selectedQuestion.difficulty)}>
+                          {selectedQuestion.difficulty}
+                        </Badge>
+                      )}
                     </div>
+                    <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
+                      <p className="font-semibold mb-2 text-sm">Question:</p>
+                      <p className="text-sm">{renderMarkdown(selectedQuestion.stem)}</p>
+                    </div>
+                    {selectedQuestion.options && selectedQuestion.options.length > 0 && (
+                      <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
+                        <p className="font-semibold mb-2 text-sm">Options:</p>
+                        <div className="space-y-1">
+                          {selectedQuestion.options.map((opt) => (
+                            <div key={opt.key} className="flex gap-2 text-sm">
+                              <span className="font-semibold">{opt.key}.</span>
+                              <span>{renderMarkdown(opt.text)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedQuestion.parts && selectedQuestion.parts.length > 0 && (
+                      <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
+                        <p className="font-semibold mb-2 text-sm">Parts:</p>
+                        <div className="space-y-2">
+                          {selectedQuestion.parts.map((part) => (
+                            <div key={part.key} className="text-sm">
+                              <span className="font-semibold">{part.key}. </span>
+                              <span>{renderMarkdown(part.prompt)}</span>
+                              {part.marks && (
+                                <span className="text-xs text-edulytics-muted ml-2">
+                                  ({part.marks} marks)
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-                {selectedQuestion.parts && selectedQuestion.parts.length > 0 && (
-                  <div className={selectedQuestion.language === 'bn' ? 'font-bengali' : ''}>
-                    <p className="font-semibold mb-2 text-sm">Parts:</p>
-                    <div className="space-y-2">
-                      {selectedQuestion.parts.map((part) => (
-                        <div key={part.key} className="text-sm">
-                          <span className="font-semibold">{part.key}. </span>
-                          <span>{renderMarkdown(part.prompt)}</span>
-                          {part.marks && (
-                            <span className="text-xs text-edulytics-muted ml-2">
-                              ({part.marks} marks)
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </AppShell>
   );
 }

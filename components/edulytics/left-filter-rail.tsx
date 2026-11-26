@@ -71,7 +71,18 @@ export function LeftFilterRail({
     try {
       const res = await fetch('/api/curriculum/root');
       const data = await res.json();
-      setBoards(data.boards || []);
+      if (data.nodes && data.nodes.length > 0) {
+        const countryId = data.nodes[0]._id;
+        const boardRes = await fetch(`/api/curriculum/children?parentId=${countryId}`);
+        const boardData = await boardRes.json();
+        const boardNodes = (boardData.nodes || []).map((node: any) => ({
+          _id: node._id.toString(),
+          name: node.name.en,
+          nameBn: node.name.bn,
+          type: node.type
+        }));
+        setBoards(boardNodes);
+      }
     } catch (error) {
       console.error('Error loading boards:', error);
     }
@@ -81,14 +92,27 @@ export function LeftFilterRail({
     try {
       const res = await fetch(`/api/curriculum/children?parentId=${subjectId}`);
       const data = await res.json();
-      const chapters = data.children || [];
+      const chapters = (data.nodes || []).map((node: any) => ({
+        _id: node._id.toString(),
+        name: node.name.en,
+        nameBn: node.name.bn,
+        type: node.type
+      }));
       
       // Load children for each chapter to build tree
       const chaptersWithChildren = await Promise.all(
         chapters.map(async (chapter: CurriculumNode) => {
           const childRes = await fetch(`/api/curriculum/children?parentId=${chapter._id}`);
           const childData = await childRes.json();
-          return { ...chapter, children: childData.children || [] };
+          const children = (childData.nodes || [])
+            .filter((n: any) => n.type === 'topic' || n.type === 'subchapter')
+            .map((node: any) => ({
+              _id: node._id.toString(),
+              name: node.name.en,
+              nameBn: node.name.bn,
+              type: node.type
+            }));
+          return { ...chapter, children };
         })
       );
       
