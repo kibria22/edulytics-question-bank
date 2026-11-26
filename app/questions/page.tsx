@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
 import { Question, QuestionSolution } from '@/lib/types';
+import { cleanMarkdownForDisplay } from '@/lib/utils/markdown';
 import dynamic from 'next/dynamic';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
@@ -178,7 +179,9 @@ function QuestionsPageContent() {
   };
 
   const renderMarkdown = (text: string) => {
-    const parts = text.split(/(\$[^$]+\$)/g);
+    // Clean media markdown first
+    const cleanText = cleanMarkdownForDisplay(text);
+    const parts = cleanText.split(/(\$[^$]+\$)/g);
     return parts.map((part, index) => {
       if (part.startsWith('$') && part.endsWith('$')) {
         const math = part.slice(1, -1);
@@ -302,9 +305,35 @@ function QuestionsPageContent() {
                 )}
 
                 {/* Question Stem */}
-                <div className={`text-sm text-edulytics-text mb-3 line-clamp-3 ${question.language === 'bn' ? 'font-bengali' : ''}`}>
-                  {renderMarkdown(question.stem)}
+                <div className={`text-sm text-edulytics-text mb-3 ${question.language === 'bn' ? 'font-bengali' : ''}`}>
+                  <div className="line-clamp-2">{renderMarkdown(question.stem)}</div>
+                  
+                  {/* Multi-statement MCQ statements */}
+                  {question.mcqKind === 'multi_statement' && question.statements && question.statements.length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs">
+                      {question.statements.map((stmt) => (
+                        <div key={stmt.key} className="flex gap-1">
+                          <span className="font-semibold">{stmt.key}.</span>
+                          <span className="line-clamp-1">{stmt.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Show MCQ Options on Card */}
+                {question.options && question.options.length > 0 && (
+                  <div className={`text-xs mb-3 ${question.language === 'bn' ? 'font-bengali' : ''}`}>
+                    <div className="grid grid-cols-2 gap-1">
+                      {question.options.map((opt) => (
+                        <div key={opt.key} className="flex gap-1 truncate">
+                          <span className="font-semibold">{opt.key}.</span>
+                          <span className="truncate">{opt.text.substring(0, 30)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Show Answers inline for MCQ */}
                 {showAnswers && question.type === 'mcq' && question.options && (

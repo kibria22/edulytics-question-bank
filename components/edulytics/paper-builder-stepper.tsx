@@ -418,7 +418,9 @@ export function PaperBuilderStepper({
                 </Label>
                 <Select value={config.boardId} onValueChange={(val) => onChange({ ...config, boardId: val || undefined, versionId: undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
                   <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t('paperBuilder.selectBoard')} />
+                    <SelectValue placeholder={t('paperBuilder.selectBoard')}>
+                      {selectedBoard ? (language === 'bn' ? selectedBoard.nameBn || selectedBoard.name : selectedBoard.name) : t('paperBuilder.selectBoard')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {boards.map(board => (
@@ -437,7 +439,9 @@ export function PaperBuilderStepper({
                   </Label>
                   <Select value={config.versionId} onValueChange={(val) => onChange({ ...config, versionId: val || undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select Version" />
+                      <SelectValue placeholder="Select Version">
+                        {selectedVersion ? (language === 'bn' ? selectedVersion.nameBn || selectedVersion.name : selectedVersion.name) : 'Select Version'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {versions.map(version => (
@@ -457,7 +461,9 @@ export function PaperBuilderStepper({
                   </Label>
                   <Select value={config.classId} onValueChange={(val) => onChange({ ...config, classId: val || undefined, groupId: undefined, subjectId: undefined })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={t('paperBuilder.selectClass')} />
+                      <SelectValue placeholder={t('paperBuilder.selectClass')}>
+                        {selectedClass ? (language === 'bn' ? selectedClass.nameBn || selectedClass.name : selectedClass.name) : t('paperBuilder.selectClass')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map(cls => (
@@ -477,7 +483,9 @@ export function PaperBuilderStepper({
                   </Label>
                   <Select value={config.groupId} onValueChange={(val) => onChange({ ...config, groupId: val || undefined, subjectId: undefined })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={t('paperBuilder.selectGroup')} />
+                      <SelectValue placeholder={t('paperBuilder.selectGroup')}>
+                        {selectedGroup ? (language === 'bn' ? selectedGroup.nameBn || selectedGroup.name : selectedGroup.name) : t('paperBuilder.selectGroup')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {groups.map(group => (
@@ -497,7 +505,9 @@ export function PaperBuilderStepper({
                   </Label>
                   <Select value={config.subjectId} onValueChange={(val) => onChange({ ...config, subjectId: val || undefined })}>
                     <SelectTrigger className="h-9">
-                      <SelectValue placeholder={t('paperBuilder.selectSubject')} />
+                      <SelectValue placeholder={t('paperBuilder.selectSubject')}>
+                        {selectedSubject ? (language === 'bn' ? selectedSubject.nameBn || selectedSubject.name : selectedSubject.name) : t('paperBuilder.selectSubject')}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {subjects.map(subject => (

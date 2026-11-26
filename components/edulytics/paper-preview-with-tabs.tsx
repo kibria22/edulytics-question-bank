@@ -11,6 +11,7 @@ import { Printer, Download, Eye, Settings2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useI18n } from '@/lib/i18n/context';
 import { cn } from '@/lib/utils';
+import { cleanMarkdownForDisplay } from '@/lib/utils/markdown';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
 
@@ -49,7 +50,8 @@ export function PaperPreviewWithTabs({ config, onSwapQuestion, onReorderQuestion
   const options = paperLang === 'bn' ? bengaliOptions : englishOptions;
 
   const renderMath = (text: string) => {
-    const parts = text.split(/(\$[^$]+\$)/g);
+    const cleanText = cleanMarkdownForDisplay(text);
+    const parts = cleanText.split(/(\$[^$]+\$)/g);
     return parts.map((part, index) => {
       if (part.startsWith('$') && part.endsWith('$')) {
         const math = part.slice(1, -1);

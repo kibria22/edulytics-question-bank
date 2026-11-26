@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     }
 
     const db = await getDb();
-    const collection = db.collection('solutions');
+    const collection = db.collection('question_solutions');
 
     const solutions = await collection
       .find({ questionId: new ObjectId(questionId) })

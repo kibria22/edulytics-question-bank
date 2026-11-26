@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const db = await getDb();
-    const collection = db.collection('solutions');
+    const collection = db.collection('question_solutions');
 
     const solution = {
       questionId: new ObjectId(questionId),
@@ -49,7 +49,7 @@ export async function PATCH(
     const body = await request.json();
 
     const db = await getDb();
-    const collection = db.collection('solutions');
+    const collection = db.collection('question_solutions');
 
     const updateData: any = {
       ...body,
