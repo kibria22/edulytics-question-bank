@@ -16,27 +16,39 @@
   --color-edulytics-purple: #8B5CF6;
   --color-edulytics-red: #EF4444;
   
-  /* Legacy theme mappings for compatibility */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  /* Shadcn/UI theme mappings */
+  --color-background: #F7F8FA;
+  --color-foreground: #1F2937;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1F2937;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1F2937;
+  --color-primary: #2F6BEA;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #EBF2FE;
+  --color-secondary-foreground: #2F6BEA;
+  --color-muted: #F3F4F6;
+  --color-muted-foreground: #6B7280;
+  --color-accent: #EBF2FE;
+  --color-accent-foreground: #2F6BEA;
+  --color-destructive: #EF4444;
+  --color-border: #E5E7EB;
+  --color-input: #E5E7EB;
+  --color-ring: #2F6BEA;
   
-  /* Border radius - Edulytics uses smaller radius */
+  /* Font family */
+  --font-sans: var(--font-inter), 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
+  
+  /* Border radius */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+  --radius: 0.5rem;
 }
 
 :root {
-  /* Edulytics light theme */
+  /* CSS variables for runtime use */
   --background: #F7F8FA;
   --foreground: #1F2937;
   --card: #FFFFFF;

@@ -1,7 +1,7 @@
 'use client';
 
 import { Bell, HelpCircle, Globe, StickyNote } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 export function TopBar() {
@@ -31,6 +31,7 @@ export function TopBar() {
         </Button>
         
         <Avatar className="h-8 w-8">
+          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin User" />
           <AvatarFallback className="bg-edulytics-primary text-white text-sm">
             AU
           </AvatarFallback>

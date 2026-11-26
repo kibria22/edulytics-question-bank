@@ -1,100 +1,48 @@
 import { chromium } from 'playwright';
+import { resolve } from 'path';
 
-const BASE_URL = 'http://localhost:43765';
-const PASSWORD = 'demo123';
+const baseURL = 'http://localhost:43765';
+const outputDir = '/opt/cursor/artifacts';
+
+const tabs = [
+  { path: '/curriculum', name: 'curriculum-browser' },
+  { path: '/questions', name: 'question-bank' },
+  { path: '/editor', name: 'question-editor' },
+  { path: '/ai-generator', name: 'ai-generator' },
+  { path: '/solutions', name: 'solutions-hints' },
+  { path: '/paper-builder', name: 'paper-builder' },
+  { path: '/sources', name: 'sources' },
+];
 
 async function takeScreenshots() {
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 },
-  });
-  const page = await context.newPage();
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 
-  try {
-    console.log('1. Navigating to home page...');
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('networkidle');
+  console.log('Taking screenshots of all 7 tabs...\n');
 
-    console.log('2. Authenticating...');
-    await page.fill('input[type="password"]', PASSWORD);
-    await page.click('button[type="submit"]');
+  for (const tab of tabs) {
+    const url = `${baseURL}${tab.path}`;
+    console.log(`Navigating to ${url}...`);
+    
+    await page.goto(url, { waitUntil: 'networkidle' });
+    
+    // Wait for content to load
+    await page.waitForSelector('main', { timeout: 10000 });
+    
+    // Additional wait for dynamic content and fonts
     await page.waitForTimeout(2000);
-
-    // Check if we're on setup screen
-    const setupButton = await page.locator('text=Seed Database').count();
-    if (setupButton > 0) {
-      console.log('3. Skipping setup (no DB)...');
-      await page.click('button:has-text("Skip")');
-      await page.waitForTimeout(1000);
-    }
-
-    console.log('4. Taking screenshots of all tabs...');
-
-    // Tab 1: Curriculum
-    console.log('   - Curriculum Browser...');
-    await page.goto(`${BASE_URL}/curriculum`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/01-curriculum-browser.png', fullPage: false });
-
-    // Tab 2: Questions
-    console.log('   - Question Bank...');
-    await page.goto(`${BASE_URL}/questions`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/02-question-bank.png', fullPage: false });
-
-    // Tab 3: Editor
-    console.log('   - Question Editor...');
-    await page.goto(`${BASE_URL}/editor`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    // Just take screenshot as-is
-    await page.screenshot({ path: '/opt/cursor/artifacts/03-question-editor.png', fullPage: false });
-
-    // Tab 4: AI Generator
-    console.log('   - AI Generator...');
-    await page.goto(`${BASE_URL}/ai-generator`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/04-ai-generator.png', fullPage: false });
-
-    // Tab 5: Solutions
-    console.log('   - Solutions & Hints...');
-    await page.goto(`${BASE_URL}/solutions`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/05-solutions-hints.png', fullPage: false });
-
-    // Tab 6: Paper Builder
-    console.log('   - Paper Builder...');
-    await page.goto(`${BASE_URL}/paper-builder`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/06-paper-builder.png', fullPage: false });
-
-    // Tab 7: Sources
-    console.log('   - Sources...');
-    await page.goto(`${BASE_URL}/sources`);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: '/opt/cursor/artifacts/07-sources.png', fullPage: false });
-
-    console.log('\n✓ All screenshots saved to /opt/cursor/artifacts/');
-    console.log('  - 01-curriculum-browser.png');
-    console.log('  - 02-question-bank.png');
-    console.log('  - 03-question-editor.png');
-    console.log('  - 04-ai-generator.png');
-    console.log('  - 05-solutions-hints.png');
-    console.log('  - 06-paper-builder.png');
-    console.log('  - 07-sources.png');
-
-  } catch (error) {
-    console.error('Error taking screenshots:', error);
-    throw error;
-  } finally {
-    await browser.close();
+    
+    const screenshotPath = resolve(outputDir, `${tab.name}.png`);
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+    
+    console.log(`✓ Screenshot saved: ${screenshotPath}`);
   }
+
+  await browser.close();
+  console.log('\nAll screenshots completed!');
 }
 
-takeScreenshots().catch(console.error);
+takeScreenshots().catch((error) => {
+  console.error('Error taking screenshots:', error);
+  process.exit(1);
+});

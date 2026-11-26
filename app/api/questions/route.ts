@@ -10,6 +10,41 @@ export async function GET(request: Request) {
     const difficulty = url.searchParams.get('difficulty');
     const search = url.searchParams.get('search');
 
+    // Demo mode: return fixture data if MongoDB is not configured
+    if (!process.env.MONGODB_URI) {
+      const { seedData } = await import('@/lib/db/seed');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let questions: any[] = seedData.questions.filter((q: any) => q.isActive);
+
+      if (type) {
+        questions = questions.filter((q: any) => q.type === type);
+      }
+
+      if (difficulty) {
+        questions = questions.filter((q: any) => q.difficulty === difficulty);
+      }
+
+      if (search) {
+        const searchLower = search.toLowerCase();
+        questions = questions.filter(
+          (q: any) =>
+            q.stem?.toLowerCase().includes(searchLower) ||
+            q.stimulus?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      const total = questions.length;
+      const start = (page - 1) * limit;
+      const paginatedQuestions = questions.slice(start, start + limit);
+
+      return NextResponse.json({
+        questions: paginatedQuestions,
+        total,
+        page,
+        limit,
+      });
+    }
+
     const db = await getDb();
     const collection = db.collection('questions');
 
