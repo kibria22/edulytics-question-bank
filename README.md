@@ -8,7 +8,7 @@ A Next.js web application for managing an educational question bank with AI-powe
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4 with shadcn/ui components
 - **Database**: MongoDB (Atlas) - optional, demo mode works without it
-- **AI**: Vercel AI Gateway with DeepSeek Chat (fast and cost-effective)
+- **AI**: Vercel AI Gateway with DeepSeek v4.1 Flash (fastest and most cost-effective)
 - **Math Rendering**: KaTeX for LaTeX expressions
 - **Font**: Inter for UI, Noto Sans Bengali for Bangla text
 
@@ -70,8 +70,8 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/edulytics?retryW
 APP_PASSWORD=your_secure_password
 
 # AI Configuration (Vercel AI Gateway)
-# Default model: DeepSeek Chat (fast and cost-effective)
-AI_MODEL=deepseek/deepseek-chat
+# Default model: DeepSeek v4.1 Flash (fastest and most cost-effective)
+AI_MODEL=deepseek/deepseek-v4.1-flash
 
 # Auth: On Vercel, OIDC is automatic. Locally, provide this key:
 AI_GATEWAY_API_KEY=your-vercel-ai-gateway-api-key
@@ -121,7 +121,7 @@ The app will be available at `http://localhost:3000` (or the port shown in termi
 3. Add environment variables in Vercel project settings:
    - `MONGODB_URI` (optional - demo mode works without it)
    - `APP_PASSWORD` (required)
-   - `AI_MODEL` (optional, defaults to `deepseek/deepseek-chat`)
+   - `AI_MODEL` (optional, defaults to `deepseek/deepseek-v4.1-flash`)
    - No `AI_GATEWAY_API_KEY` needed - Vercel uses OIDC automatically
 4. Deploy
 
@@ -151,7 +151,7 @@ Metadata for textbooks, exams, guides, and other question sources.
 - **Bilingual Support**: Bangla and English throughout the UI
 - **Math Support**: LaTeX expressions rendered with KaTeX (use `$...$` syntax)
 - **Password Protection**: Simple access control for internal tools
-- **AI Integration**: DeepSeek Chat via Vercel AI Gateway (fast, cost-effective question generation)
+- **AI Integration**: DeepSeek v4.1 Flash via Vercel AI Gateway (fastest, most cost-effective question generation)
 - **Demo Mode**: Works without MongoDB - uses fixture data for development
 - **Responsive Design**: Works on desktop and mobile
 - **Type Safety**: Full TypeScript coverage with Zod validation

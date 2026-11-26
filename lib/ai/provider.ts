@@ -3,8 +3,8 @@ import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
 export function getAIModel() {
-  // Default to DeepSeek Chat via Vercel AI Gateway
-  const modelId = process.env.AI_MODEL || 'deepseek/deepseek-chat';
+  // Default to DeepSeek v4.1 Flash via Vercel AI Gateway
+  const modelId = process.env.AI_MODEL || 'deepseek/deepseek-v4.1-flash';
   
   // On Vercel, OIDC is used automatically
   // Locally, use AI_GATEWAY_API_KEY
