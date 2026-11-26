@@ -89,7 +89,7 @@ export default function AIGeneratorPage() {
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs">
-            AI provider not configured. Please set AI_PROVIDER and the corresponding API key in your environment variables.
+            AI provider not configured. Please set AI_GATEWAY_API_KEY (locally) or deploy to Vercel (OIDC automatic).
           </AlertDescription>
         </Alert>
       )}

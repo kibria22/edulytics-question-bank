@@ -1,57 +1,20 @@
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGateway } from '@ai-sdk/gateway';
 import { generateObject, generateText } from 'ai';
-
-export type AIProvider = 'openai' | 'anthropic' | 'google';
-
-export interface AIConfig {
-  provider: AIProvider;
-  apiKey: string;
-}
-
-export function getAIConfig(): AIConfig | null {
-  const provider = (process.env.AI_PROVIDER || 'openai') as AIProvider;
-
-  let apiKey: string | undefined;
-  switch (provider) {
-    case 'openai':
-      apiKey = process.env.OPENAI_API_KEY;
-      break;
-    case 'anthropic':
-      apiKey = process.env.ANTHROPIC_API_KEY;
-      break;
-    case 'google':
-      apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-      break;
-  }
-
-  if (!apiKey) {
-    return null;
-  }
-
-  return { provider, apiKey };
-}
+import { z } from 'zod';
 
 export function getAIModel() {
-  const config = getAIConfig();
-  if (!config) {
-    return null;
-  }
-
-  switch (config.provider) {
-    case 'openai':
-      const openai = createOpenAI({ apiKey: config.apiKey });
-      return openai('gpt-4o');
-    case 'anthropic':
-      const anthropic = createAnthropic({ apiKey: config.apiKey });
-      return anthropic('claude-3-5-sonnet-20241022');
-    case 'google':
-      const google = createGoogleGenerativeAI({ apiKey: config.apiKey });
-      return google('gemini-1.5-pro');
-    default:
-      return null;
-  }
+  // Default to DeepSeek Chat via Vercel AI Gateway
+  const modelId = process.env.AI_MODEL || 'deepseek/deepseek-chat';
+  
+  // On Vercel, OIDC is used automatically
+  // Locally, use AI_GATEWAY_API_KEY
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  
+  const gateway = createGateway({
+    apiKey,
+  });
+  
+  return gateway(modelId);
 }
 
 export async function generateAIText(
@@ -59,9 +22,6 @@ export async function generateAIText(
   systemPrompt?: string
 ): Promise<string> {
   const model = getAIModel();
-  if (!model) {
-    throw new Error('AI provider not configured');
-  }
 
   const { text } = await generateText({
     model,
@@ -74,24 +34,55 @@ export async function generateAIText(
 
 export async function generateAIObject<T>(
   prompt: string,
-  schema: any,
+  schema: z.ZodSchema<T>,
   systemPrompt?: string
 ): Promise<T> {
   const model = getAIModel();
-  if (!model) {
-    throw new Error('AI provider not configured');
+
+  try {
+    // Try structured output with generateObject
+    const { object } = await generateObject({
+      model,
+      prompt,
+      schema,
+      system: systemPrompt,
+      mode: 'json',
+    });
+
+    return object;
+  } catch (error) {
+    // Fallback: use JSON-mode prompting + manual parse
+    console.warn('Structured output failed, falling back to JSON prompting', error);
+    
+    const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON matching this structure. Do not include any explanations or markdown formatting.`;
+    
+    const { text } = await generateText({
+      model,
+      prompt: jsonPrompt,
+      system: systemPrompt,
+    });
+
+    // Parse and validate with retry
+    try {
+      const json = JSON.parse(text);
+      return schema.parse(json);
+    } catch (parseError) {
+      // Retry once with cleaner extraction
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const json = JSON.parse(jsonMatch[0]);
+        return schema.parse(json);
+      }
+      throw parseError;
+    }
   }
-
-  const { object } = await generateObject({
-    model,
-    prompt,
-    schema,
-    system: systemPrompt,
-  });
-
-  return object as T;
 }
 
 export function isAIConfigured(): boolean {
-  return getAIConfig() !== null;
+  // On Vercel, OIDC is automatic, so always configured
+  // Locally, check for API key
+  if (process.env.VERCEL) {
+    return true;
+  }
+  return !!process.env.AI_GATEWAY_API_KEY;
 }

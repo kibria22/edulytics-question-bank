@@ -100,7 +100,7 @@ export default function QuestionsPage() {
         
         <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
           <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="Question Type" />
+            <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -115,10 +115,10 @@ export default function QuestionsPage() {
 
         <Select value={difficultyFilter} onValueChange={(val) => val && setDifficultyFilter(val)}>
           <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="Difficulty" />
+            <SelectValue placeholder="All Difficulty" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Difficulties</SelectItem>
+            <SelectItem value="all">All Difficulty</SelectItem>
             <SelectItem value="easy">Easy</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="hard">Hard</SelectItem>
@@ -189,8 +189,12 @@ export default function QuestionsPage() {
                   {question.options && (
                     <div className="flex-1 bg-blue-50 border border-blue-200 rounded p-2">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-xs font-bold text-blue-600">{question.options.length}</span>
+                        <div className="flex gap-0.5">
+                          {question.options.map((opt) => (
+                            <div key={opt.key} className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-xs font-bold text-blue-600">{opt.key}</span>
+                            </div>
+                          ))}
                         </div>
                         <span className="text-xs text-edulytics-muted">Options</span>
                       </div>

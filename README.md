@@ -7,10 +7,10 @@ A Next.js web application for managing an educational question bank with AI-powe
 - **Framework**: Next.js 16.4.6 (App Router) with React 19.3.0
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4 with shadcn/ui components
-- **Database**: MongoDB (Atlas)
-- **AI**: Vercel AI SDK (provider-agnostic: OpenAI, Anthropic, or Google)
+- **Database**: MongoDB (Atlas) - optional, demo mode works without it
+- **AI**: Vercel AI Gateway with DeepSeek Chat (fast and cost-effective)
 - **Math Rendering**: KaTeX for LaTeX expressions
-- **Font**: Noto Sans Bengali for Bangla text support
+- **Font**: Inter for UI, Noto Sans Bengali for Bangla text
 
 ## Features
 
@@ -63,24 +63,29 @@ A Next.js web application for managing an educational question bank with AI-powe
 Create a `.env.local` file in the project root:
 
 ```env
-# MongoDB Connection (required)
+# MongoDB Connection (optional - demo mode works without it)
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/edulytics?retryWrites=true&w=majority
 
 # App Password (required for access)
 APP_PASSWORD=your_secure_password
 
-# AI Configuration (at least one provider key required for AI features)
-AI_PROVIDER=openai
-# OpenAI
-OPENAI_API_KEY=sk-...
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-# Google
-GOOGLE_GENERATIVE_AI_API_KEY=...
+# AI Configuration (Vercel AI Gateway)
+# Default model: DeepSeek Chat (fast and cost-effective)
+AI_MODEL=deepseek/deepseek-chat
+
+# Auth: On Vercel, OIDC is automatic. Locally, provide this key:
+AI_GATEWAY_API_KEY=your-vercel-ai-gateway-api-key
 
 # Node Environment
 NODE_ENV=development
 ```
+
+### Getting AI Gateway API Key
+
+1. Visit [Vercel AI Gateway](https://vercel.com/docs/ai-gateway)
+2. Create a gateway configuration
+3. Copy the API key for local development
+4. On Vercel deployments, OIDC authentication is automatic (no key needed)
 
 ## Installation
 
@@ -114,13 +119,16 @@ The app will be available at `http://localhost:3000` (or the port shown in termi
 1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
 2. Import the project in Vercel
 3. Add environment variables in Vercel project settings:
-   - `MONGODB_URI`
-   - `APP_PASSWORD`
-   - `AI_PROVIDER` (optional, defaults to 'openai')
-   - API keys for your chosen AI provider(s)
+   - `MONGODB_URI` (optional - demo mode works without it)
+   - `APP_PASSWORD` (required)
+   - `AI_MODEL` (optional, defaults to `deepseek/deepseek-chat`)
+   - No `AI_GATEWAY_API_KEY` needed - Vercel uses OIDC automatically
 4. Deploy
 
-Vercel will automatically detect Next.js and use the correct build settings.
+Vercel will automatically:
+- Detect Next.js and use the correct build settings
+- Authenticate with AI Gateway using OIDC (no API key required)
+- Enable Turbopack for faster builds
 
 ## Database Schema
 
@@ -143,7 +151,8 @@ Metadata for textbooks, exams, guides, and other question sources.
 - **Bilingual Support**: Bangla and English throughout the UI
 - **Math Support**: LaTeX expressions rendered with KaTeX (use `$...$` syntax)
 - **Password Protection**: Simple access control for internal tools
-- **AI Integration**: Provider-agnostic AI for question generation
+- **AI Integration**: DeepSeek Chat via Vercel AI Gateway (fast, cost-effective question generation)
+- **Demo Mode**: Works without MongoDB - uses fixture data for development
 - **Responsive Design**: Works on desktop and mobile
 - **Type Safety**: Full TypeScript coverage with Zod validation
 

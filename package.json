@@ -9,9 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.110",
-    "@ai-sdk/google": "^4.0.128",
-    "@ai-sdk/openai": "^4.0.125",
+    "@ai-sdk/gateway": "^4.0.156",
     "@base-ui/react": "^1.9.0",
     "@hookform/resolvers": "^7.0.9",
     "ai": "^7.0.183",
