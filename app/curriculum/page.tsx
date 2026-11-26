@@ -327,8 +327,8 @@ export default function DashboardPage() {
           <ResponsiveContainer width="100%" height={180}>
             <BarChart 
               data={curriculumData.slice(0, 10)} 
-              layout="horizontal"
-              margin={{ right: 10 }}
+              layout="vertical"
+              margin={{ right: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <YAxis 

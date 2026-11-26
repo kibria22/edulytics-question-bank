@@ -22,9 +22,9 @@ async function takeScreenshots() {
     // Take Dashboard screenshot
     console.log('Taking Dashboard screenshot...');
     await page.goto('http://localhost:3000/curriculum', { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     await page.screenshot({
-      path: '/opt/cursor/artifacts/dashboard-with-filters.png',
+      path: '/opt/cursor/artifacts/dashboard-final-v3.png',
       fullPage: true,
     });
     console.log('Dashboard screenshot saved');
@@ -34,7 +34,7 @@ async function takeScreenshots() {
     await page.goto('http://localhost:3000/questions', { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
     await page.screenshot({
-      path: '/opt/cursor/artifacts/question-bank-with-filters.png',
+      path: '/opt/cursor/artifacts/question-bank-final-v3.png',
       fullPage: true,
     });
     console.log('Question Bank screenshot saved');
@@ -44,7 +44,7 @@ async function takeScreenshots() {
     await page.goto('http://localhost:3000/paper-builder', { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
     await page.screenshot({
-      path: '/opt/cursor/artifacts/paper-builder-with-filters.png',
+      path: '/opt/cursor/artifacts/paper-builder-final-v3.png',
       fullPage: true,
     });
     console.log('Paper Builder screenshot saved');
@@ -54,7 +54,7 @@ async function takeScreenshots() {
     await page.click('button:has-text("Pick Questions")');
     await page.waitForTimeout(2000);
     await page.screenshot({
-      path: '/opt/cursor/artifacts/paper-builder-question-picker.png',
+      path: '/opt/cursor/artifacts/paper-builder-picker-final-v3.png',
       fullPage: true,
     });
     console.log('Paper Builder question picker screenshot saved');
