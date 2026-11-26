@@ -6,6 +6,50 @@ import { PaperBuilderStepper } from '@/components/edulytics/paper-builder-steppe
 import { PaperPreview } from '@/components/edulytics/paper-preview';
 import { Question } from '@/lib/types';
 
+// Helper to get default section titles based on paper language
+export function getDefaultSectionTitle(type: string, lang: 'en' | 'bn'): string {
+  const titles: Record<string, Record<'en' | 'bn', string>> = {
+    mcq: { en: 'Multiple Choice Questions', bn: 'বহুনির্বাচনি প্রশ্ন' },
+    cq: { en: 'Creative Questions', bn: 'সৃজনশীল প্রশ্ন' },
+    sq: { en: 'Short Questions', bn: 'সংক্ষিপ্ত প্রশ্ন' },
+    short: { en: 'Short Questions', bn: 'ছোট প্রশ্ন' },
+    long: { en: 'Long Questions', bn: 'বড় প্রশ্ন' },
+  };
+  return titles[type]?.[lang] || titles.mcq[lang];
+}
+
+function getInitialConfig(paperLang: 'en' | 'bn'): PaperConfig {
+  return {
+    paperType: 'exam',
+    paperTitle: paperLang === 'bn' ? 'অর্ধবার্ষিক পরীক্ষা ২০২৬' : 'Half-yearly Exam 2026',
+    paperLanguage: paperLang,
+    schoolName: paperLang === 'bn' ? 'ঢাকা আদর্শ উচ্চ বিদ্যালয়' : 'Dhaka Model High School',
+    duration: 180,
+    fullMarks: 75,
+    sections: [
+      {
+        id: '1',
+        title: getDefaultSectionTitle('mcq', paperLang),
+        type: 'mcq',
+        questionsNeeded: 25,
+        marksEach: 1,
+        difficulty: 'mixed',
+        questions: [],
+      },
+      {
+        id: '2',
+        title: getDefaultSectionTitle('cq', paperLang),
+        type: 'cq',
+        questionsNeeded: 5,
+        questionsToAnswer: 5,
+        marksEach: 10,
+        difficulty: 'mixed',
+        questions: [],
+      },
+    ],
+  };
+}
+
 export interface PaperConfig {
   paperType: 'exam' | 'assignment';
   paperTitle: string;
@@ -39,35 +83,7 @@ export interface PaperSection {
 }
 
 export default function PaperBuilderPage() {
-  const [config, setConfig] = useState<PaperConfig>({
-    paperType: 'exam',
-    paperTitle: 'Half-yearly Exam 2026',
-    paperLanguage: 'bn', // Default to Bangla paper content
-    schoolName: 'Dhaka Model High School',
-    duration: 180,
-    fullMarks: 75, // Matches section total: 25×1 + 5×10 = 75
-    sections: [
-      {
-        id: '1',
-        title: 'Multiple Choice Questions',
-        type: 'mcq',
-        questionsNeeded: 25,
-        marksEach: 1,
-        difficulty: 'mixed',
-        questions: [],
-      },
-      {
-        id: '2',
-        title: 'Creative Questions',
-        type: 'cq',
-        questionsNeeded: 5,
-        questionsToAnswer: 5,
-        marksEach: 10,
-        difficulty: 'mixed',
-        questions: [],
-      },
-    ],
-  });
+  const [config, setConfig] = useState<PaperConfig>(getInitialConfig('bn'));
 
   const [generating, setGenerating] = useState(false);
 

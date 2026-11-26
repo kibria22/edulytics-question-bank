@@ -171,6 +171,8 @@ const translations: Record<Language, Record<string, string>> = {
     'paperBuilder.bangla': 'Bangla',
     'paperBuilder.answerAnyN': 'Answer any {n}',
     'paperBuilder.rightNumberIndicatesMarks': '[The number on the right indicates full marks.]',
+    'paperBuilder.newSection': 'New Section',
+    'paperBuilder.questions': 'questions',
     
     // Question types
     'questionType.mcq': 'Multiple Choice (MCQ)',
@@ -178,6 +180,13 @@ const translations: Record<Language, Record<string, string>> = {
     'questionType.sq': 'Short (SQ)',
     'questionType.short': 'Short Question',
     'questionType.long': 'Long Question',
+    
+    // Section titles (for paper content)
+    'sectionTitle.mcq': 'Multiple Choice Questions',
+    'sectionTitle.cq': 'Creative Questions',
+    'sectionTitle.sq': 'Short Questions',
+    'sectionTitle.short': 'Short Questions',
+    'sectionTitle.long': 'Long Questions',
     
     // Filters
     'filters.board': 'Board',
@@ -323,6 +332,8 @@ const translations: Record<Language, Record<string, string>> = {
     'paperBuilder.bangla': 'বাংলা',
     'paperBuilder.answerAnyN': 'যে কোনো {n}টি উত্তর দাও',
     'paperBuilder.rightNumberIndicatesMarks': '[ডান পাশের সংখ্যা প্রশ্নের পূর্ণমান জ্ঞাপক।]',
+    'paperBuilder.newSection': 'নতুন সেকশন',
+    'paperBuilder.questions': 'প্রশ্ন',
     
     // Question types
     'questionType.mcq': 'বহুনির্বাচনি (MCQ)',
@@ -330,6 +341,13 @@ const translations: Record<Language, Record<string, string>> = {
     'questionType.sq': 'সংক্ষিপ্ত (SQ)',
     'questionType.short': 'ছোট প্রশ্ন',
     'questionType.long': 'বড় প্রশ্ন',
+    
+    // Section titles (for paper content)
+    'sectionTitle.mcq': 'বহুনির্বাচনি প্রশ্ন',
+    'sectionTitle.cq': 'সৃজনশীল প্রশ্ন',
+    'sectionTitle.sq': 'সংক্ষিপ্ত প্রশ্ন',
+    'sectionTitle.short': 'ছোট প্রশ্ন',
+    'sectionTitle.long': 'বড় প্রশ্ন',
     
     // Filters
     'filters.board': 'বোর্ড',

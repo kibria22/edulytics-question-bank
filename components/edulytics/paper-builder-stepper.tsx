@@ -119,7 +119,7 @@ export function PaperBuilderStepper({
   const addSection = () => {
     const newSection: PaperSection = {
       id: Date.now().toString(),
-      title: 'নতুন সেকশন',
+      title: t('paperBuilder.newSection'),
       type: 'mcq',
       questionsNeeded: 10,
       marksEach: 1,
@@ -152,7 +152,7 @@ export function PaperBuilderStepper({
     : null;
 
   const step3Summary = config.chapterIds?.length
-    ? `${config.chapterIds.length} অধ্যায় নির্বাচিত`
+    ? `${config.chapterIds.length} ${language === 'bn' ? 'অধ্যায় নির্বাচিত' : 'chapters selected'}`
     : null;
 
   const isStep1Complete = config.paperTitle && config.paperType;
@@ -179,14 +179,14 @@ export function PaperBuilderStepper({
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                 isStep1Complete ? 'bg-edulytics-primary text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                ১
+                1
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-sm text-edulytics-text font-bengali">
-                  কী তৈরি করবেন?
+                <div className={cn("font-bold text-sm text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.step1')}
                 </div>
                 {currentStep !== 1 && config.paperTitle && (
-                  <div className="text-xs text-edulytics-muted font-bengali">
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
                     {config.paperTitle}
                   </div>
                 )}
@@ -206,9 +206,11 @@ export function PaperBuilderStepper({
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="font-bold text-sm mb-1 font-bengali">পরীক্ষার প্রশ্নপত্র</div>
-                  <div className="text-xs text-edulytics-muted font-bengali">
-                    স্কুল নাম, সময়, পূর্ণমান সহ
+                  <div className={cn("font-bold text-sm mb-1", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.examPaper')}
+                  </div>
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.examPaperDesc')}
                   </div>
                 </button>
                 <button
@@ -219,61 +221,81 @@ export function PaperBuilderStepper({
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="font-bold text-sm mb-1 font-bengali">অ্যাসাইনমেন্ট</div>
-                  <div className="text-xs text-edulytics-muted font-bengali">
-                    শিরোনাম, নির্দেশনা, তারিখ
+                  <div className={cn("font-bold text-sm mb-1", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.assignment')}
+                  </div>
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.assignmentDesc')}
                   </div>
                 </button>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-edulytics-text font-bengali">
-                  {config.paperType === 'exam' ? 'পরীক্ষার নাম' : 'অ্যাসাইনমেন্ট শিরোনাম'}
+                <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.paperLanguage')}
+                </Label>
+                <Select 
+                  value={config.paperLanguage} 
+                  onValueChange={(val) => val && onChange({ ...config, paperLanguage: val as 'en' | 'bn' })}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">{t('paperBuilder.english')}</SelectItem>
+                    <SelectItem value="bn" className="font-bengali">{t('paperBuilder.bangla')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.paperTitle')}
                 </Label>
                 <Input
                   value={config.paperTitle}
                   onChange={(e) => onChange({ ...config, paperTitle: e.target.value })}
-                  placeholder="যেমন: অর্ধবার্ষিক পরীক্ষা ২০২৪"
-                  className="h-9 font-bengali"
+                  placeholder={t('paperBuilder.paperTitlePlaceholder')}
+                  className={cn("h-9", config.paperLanguage === 'bn' && 'font-bengali')}
                 />
               </div>
 
               {config.paperType === 'exam' && (
                 <>
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-edulytics-text font-bengali">
-                      শিক্ষা প্রতিষ্ঠান
+                    <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                      {t('paperBuilder.schoolName')}
                     </Label>
                     <Input
                       value={config.schoolName || ''}
                       onChange={(e) => onChange({ ...config, schoolName: e.target.value })}
-                      placeholder="যেমন: ঢাকা আদর্শ স্কুল"
-                      className="h-9 font-bengali"
+                      placeholder={t('paperBuilder.schoolPlaceholder')}
+                      className={cn("h-9", config.paperLanguage === 'bn' && 'font-bengali')}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-edulytics-text font-bengali">
-                        সময় (মিনিট)
+                      <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.duration')}
                       </Label>
                       <Input
                         type="number"
                         value={config.duration || ''}
                         onChange={(e) => onChange({ ...config, duration: parseInt(e.target.value) || undefined })}
-                        placeholder="১৮০"
-                        className="h-9 font-bengali"
+                        placeholder="180"
+                        className="h-9"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-edulytics-text font-bengali">
-                        পূর্ণমান
+                      <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.fullMarks')}
                       </Label>
                       <Input
                         type="number"
                         value={config.fullMarks || ''}
                         onChange={(e) => onChange({ ...config, fullMarks: parseInt(e.target.value) || undefined })}
-                        placeholder="১০০"
-                        className="h-9 font-bengali"
+                        placeholder="75"
+                        className="h-9"
                       />
                     </div>
                   </div>
@@ -283,9 +305,9 @@ export function PaperBuilderStepper({
               <Button
                 onClick={() => setCurrentStep(2)}
                 disabled={!isStep1Complete}
-                className="w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white font-bengali"
+                className={cn("w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white", language === 'bn' && 'font-bengali')}
               >
-                পরবর্তী →
+                {t('paperBuilder.next')}
               </Button>
             </div>
           </CollapsibleContent>
@@ -300,14 +322,14 @@ export function PaperBuilderStepper({
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                 isStep2Complete ? 'bg-edulytics-primary text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                ২
+                2
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-sm text-edulytics-text font-bengali">
-                  শ্রেণি ও বিষয়
+                <div className={cn("font-bold text-sm text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.step2')}
                 </div>
                 {currentStep !== 2 && step2Summary && (
-                  <div className="text-xs text-edulytics-muted font-bengali">
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
                     {step2Summary}
                   </div>
                 )}
@@ -319,10 +341,12 @@ export function PaperBuilderStepper({
           <CollapsibleContent>
             <div className="mt-4 space-y-3">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-edulytics-text font-bengali">বোর্ড</Label>
+                <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.board')}
+                </Label>
                 <Select value={config.boardId} onValueChange={(val) => onChange({ ...config, boardId: val || undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
-                  <SelectTrigger className="h-9 font-bengali">
-                    <SelectValue placeholder="বোর্ড নির্বাচন করুন" />
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t('paperBuilder.selectBoard')} />
                   </SelectTrigger>
                   <SelectContent>
                     {boards.map(board => (
@@ -336,10 +360,12 @@ export function PaperBuilderStepper({
 
               {config.boardId && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-edulytics-text font-bengali">শ্রেণি</Label>
+                  <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.class')}
+                  </Label>
                   <Select value={config.classId} onValueChange={(val) => onChange({ ...config, classId: val || undefined, groupId: undefined, subjectId: undefined })}>
-                    <SelectTrigger className="h-9 font-bengali">
-                      <SelectValue placeholder="শ্রেণি নির্বাচন করুন" />
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={t('paperBuilder.selectClass')} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map(cls => (
@@ -354,10 +380,12 @@ export function PaperBuilderStepper({
 
               {config.classId && groups.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-edulytics-text font-bengali">গ্রুপ</Label>
+                  <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.group')}
+                  </Label>
                   <Select value={config.groupId} onValueChange={(val) => onChange({ ...config, groupId: val || undefined, subjectId: undefined })}>
-                    <SelectTrigger className="h-9 font-bengali">
-                      <SelectValue placeholder="গ্রুপ নির্বাচন করুন" />
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={t('paperBuilder.selectGroup')} />
                     </SelectTrigger>
                     <SelectContent>
                       {groups.map(group => (
@@ -372,10 +400,12 @@ export function PaperBuilderStepper({
 
               {(config.groupId || (config.classId && groups.length === 0)) && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-edulytics-text font-bengali">বিষয়</Label>
+                  <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                    {t('paperBuilder.subject')}
+                  </Label>
                   <Select value={config.subjectId} onValueChange={(val) => onChange({ ...config, subjectId: val || undefined })}>
-                    <SelectTrigger className="h-9 font-bengali">
-                      <SelectValue placeholder="বিষয় নির্বাচন করুন" />
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={t('paperBuilder.selectSubject')} />
                     </SelectTrigger>
                     <SelectContent>
                       {subjects.map(subject => (
@@ -391,9 +421,9 @@ export function PaperBuilderStepper({
               <Button
                 onClick={() => setCurrentStep(3)}
                 disabled={!isStep2Complete}
-                className="w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white font-bengali"
+                className={cn("w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white", language === 'bn' && 'font-bengali')}
               >
-                পরবর্তী →
+                {t('paperBuilder.next')}
               </Button>
             </div>
           </CollapsibleContent>
@@ -408,14 +438,14 @@ export function PaperBuilderStepper({
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                 isStep3Complete ? 'bg-edulytics-primary text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                ৩
+                3
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-sm text-edulytics-text font-bengali">
-                  অধ্যায়
+                <div className={cn("font-bold text-sm text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.step3')}
                 </div>
                 {currentStep !== 3 && step3Summary && (
-                  <div className="text-xs text-edulytics-muted font-bengali">
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
                     {step3Summary}
                   </div>
                 )}
@@ -439,8 +469,8 @@ export function PaperBuilderStepper({
                   }}
                   className="rounded border-gray-300"
                 />
-                <Label className="text-xs font-semibold text-edulytics-text font-bengali">
-                  সব অধ্যায়
+                <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.allChapters')}
                 </Label>
               </div>
 
@@ -476,9 +506,9 @@ export function PaperBuilderStepper({
               <Button
                 onClick={() => setCurrentStep(4)}
                 disabled={!isStep3Complete}
-                className="w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white font-bengali"
+                className={cn("w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white", language === 'bn' && 'font-bengali')}
               >
-                পরবর্তী →
+                {t('paperBuilder.next')}
               </Button>
             </div>
           </CollapsibleContent>
@@ -493,15 +523,15 @@ export function PaperBuilderStepper({
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                 isStep4Complete ? 'bg-edulytics-primary text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                ৪
+                4
               </div>
               <div className="flex-1 text-left">
-                <div className="font-bold text-sm text-edulytics-text font-bengali">
-                  প্রশ্ন ও সময়
+                <div className={cn("font-bold text-sm text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.step4')}
                 </div>
                 {currentStep !== 4 && config.sections.length > 0 && (
-                  <div className="text-xs text-edulytics-muted font-bengali">
-                    {totalQuestions} প্রশ্ন · {totalMarks} নম্বর
+                  <div className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                    {totalQuestions} {t('paperBuilder.questions')} · {totalMarks}
                   </div>
                 )}
               </div>
@@ -517,8 +547,8 @@ export function PaperBuilderStepper({
                     <Input
                       value={section.title}
                       onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                      className="h-8 text-sm font-bengali flex-1"
-                      placeholder="সেকশন শিরোনাম"
+                      className={cn("h-8 text-sm flex-1", config.paperLanguage === 'bn' && 'font-bengali')}
+                      placeholder={t('paperBuilder.sectionTitle')}
                     />
                     <Button
                       variant="ghost"
@@ -532,64 +562,92 @@ export function PaperBuilderStepper({
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className="text-xs text-edulytics-muted font-bengali">ধরন</Label>
+                      <Label className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.questionType')}
+                      </Label>
                       <Select value={section.type} onValueChange={(val: any) => updateSection(section.id, { type: val })}>
-                        <SelectTrigger className="h-8 text-xs font-bengali">
+                        <SelectTrigger className="h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="mcq" className="font-bengali">বহুনির্বাচনি (MCQ)</SelectItem>
-                          <SelectItem value="cq" className="font-bengali">সৃজনশীল (CQ)</SelectItem>
-                          <SelectItem value="sq" className="font-bengali">সংক্ষিপ্ত (SQ)</SelectItem>
-                          <SelectItem value="short" className="font-bengali">ছোট প্রশ্ন</SelectItem>
-                          <SelectItem value="long" className="font-bengali">বড় প্রশ্ন</SelectItem>
+                          <SelectItem value="mcq" className={language === 'bn' ? 'font-bengali' : ''}>
+                            {t('questionType.mcq')}
+                          </SelectItem>
+                          <SelectItem value="cq" className={language === 'bn' ? 'font-bengali' : ''}>
+                            {t('questionType.cq')}
+                          </SelectItem>
+                          <SelectItem value="sq" className={language === 'bn' ? 'font-bengali' : ''}>
+                            {t('questionType.sq')}
+                          </SelectItem>
+                          <SelectItem value="short" className={language === 'bn' ? 'font-bengali' : ''}>
+                            {t('questionType.short')}
+                          </SelectItem>
+                          <SelectItem value="long" className={language === 'bn' ? 'font-bengali' : ''}>
+                            {t('questionType.long')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-edulytics-muted font-bengali">প্রশ্ন সংখ্যা</Label>
+                      <Label className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.questionCount')}
+                      </Label>
                       <Input
                         type="number"
                         value={section.questionsNeeded}
                         onChange={(e) => updateSection(section.id, { questionsNeeded: parseInt(e.target.value) || 0 })}
-                        className="h-8 text-xs font-bengali"
+                        className="h-8 text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-edulytics-muted font-bengali">প্রতিটি নম্বর</Label>
+                      <Label className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.marksEach')}
+                      </Label>
                       <Input
                         type="number"
                         value={section.marksEach}
                         onChange={(e) => updateSection(section.id, { marksEach: parseInt(e.target.value) || 0 })}
-                        className="h-8 text-xs font-bengali"
+                        className="h-8 text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-edulytics-muted font-bengali">উত্তর দিতে হবে</Label>
+                      <Label className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                        {t('paperBuilder.answerCount')}
+                      </Label>
                       <Input
                         type="number"
                         value={section.questionsToAnswer || section.questionsNeeded}
                         onChange={(e) => updateSection(section.id, { questionsToAnswer: parseInt(e.target.value) || undefined })}
-                        className="h-8 text-xs font-bengali"
+                        className="h-8 text-xs"
                         placeholder={String(section.questionsNeeded)}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-xs text-edulytics-muted font-bengali">অসুবিধা</Label>
+                    <Label className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+                      {t('paperBuilder.difficulty')}
+                    </Label>
                     <Select value={section.difficulty || 'mixed'} onValueChange={(val: any) => updateSection(section.id, { difficulty: val })}>
-                      <SelectTrigger className="h-8 text-xs font-bengali">
+                      <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="mixed" className="font-bengali">মিশ্র</SelectItem>
-                        <SelectItem value="easy" className="font-bengali">সহজ</SelectItem>
-                        <SelectItem value="medium" className="font-bengali">মাঝারি</SelectItem>
-                        <SelectItem value="hard" className="font-bengali">কঠিন</SelectItem>
+                        <SelectItem value="mixed" className={language === 'bn' ? 'font-bengali' : ''}>
+                          {t('paperBuilder.mixed')}
+                        </SelectItem>
+                        <SelectItem value="easy" className={language === 'bn' ? 'font-bengali' : ''}>
+                          {t('paperBuilder.easy')}
+                        </SelectItem>
+                        <SelectItem value="medium" className={language === 'bn' ? 'font-bengali' : ''}>
+                          {t('paperBuilder.medium')}
+                        </SelectItem>
+                        <SelectItem value="hard" className={language === 'bn' ? 'font-bengali' : ''}>
+                          {t('paperBuilder.hard')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -599,10 +657,10 @@ export function PaperBuilderStepper({
               <Button
                 variant="outline"
                 onClick={addSection}
-                className="w-full border-edulytics-primary/30 text-edulytics-primary hover:bg-edulytics-primary-light font-bengali"
+                className={cn("w-full border-edulytics-primary/30 text-edulytics-primary hover:bg-edulytics-primary-light", language === 'bn' && 'font-bengali')}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                সেকশন যোগ করুন
+                {t('paperBuilder.addSection')}
               </Button>
             </div>
           </CollapsibleContent>
@@ -613,27 +671,27 @@ export function PaperBuilderStepper({
       {config.sections.length > 0 && (
         <ContentCard className="bg-gradient-to-br from-edulytics-primary/10 to-purple-100/50 border-2 border-edulytics-primary/30">
           <div className="space-y-3">
-            <div className="font-bold text-sm text-edulytics-text font-bengali">
-              সংক্ষিপ্ত বিবরণ
+            <div className={cn("font-bold text-sm text-edulytics-text", language === 'bn' && 'font-bengali')}>
+              {t('paperBuilder.summary')}
             </div>
 
-            <div className="space-y-2 text-sm font-bengali">
+            <div className={cn("space-y-2 text-sm", language === 'bn' && 'font-bengali')}>
               <div className="flex justify-between">
-                <span className="text-edulytics-muted">মোট প্রশ্ন:</span>
-                <span className="font-semibold">{totalQuestions}টি</span>
+                <span className="text-edulytics-muted">{t('paperBuilder.totalQuestions')}</span>
+                <span className="font-semibold">{totalQuestions}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-edulytics-muted">পূর্ণমান:</span>
+                <span className="text-edulytics-muted">{t('paperBuilder.totalMarks')}</span>
                 <span className="font-semibold">{totalMarks}</span>
               </div>
               {config.duration && (
                 <div className="flex justify-between">
-                  <span className="text-edulytics-muted">সময়:</span>
-                  <span className="font-semibold">{config.duration} মিনিট</span>
+                  <span className="text-edulytics-muted">{t('paperBuilder.time')}</span>
+                  <span className="font-semibold">{config.duration} {t('paperBuilder.minutes')}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-edulytics-muted">তৈরি হয়েছে:</span>
+                <span className="text-edulytics-muted">{t('paperBuilder.generated')}</span>
                 <span className="font-semibold">
                   {generatedCount}/{totalQuestions}
                 </span>
@@ -643,8 +701,10 @@ export function PaperBuilderStepper({
             {config.fullMarks && totalMarks !== config.fullMarks && (
               <div className="flex items-start gap-2 p-2 bg-yellow-100 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-yellow-700 font-bengali">
-                  মোট নম্বর ({totalMarks}) লক্ষ্য পূর্ণমান ({config.fullMarks}) এর সাথে মিলছে না
+                <div className={cn("text-xs text-yellow-700", language === 'bn' && 'font-bengali')}>
+                  {t('paperBuilder.marksWarning')
+                    .replace('{actual}', String(totalMarks))
+                    .replace('{target}', String(config.fullMarks))}
                 </div>
               </div>
             )}
@@ -652,17 +712,17 @@ export function PaperBuilderStepper({
             <Button
               onClick={onGenerate}
               disabled={generating || !isStep4Complete}
-              className="w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white font-bengali"
+              className={cn("w-full bg-edulytics-primary hover:bg-edulytics-primary/90 text-white", language === 'bn' && 'font-bengali')}
             >
               {generating ? (
                 <>
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  তৈরি হচ্ছে...
+                  {t('paperBuilder.generating')}
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  {generatedCount > 0 ? 'নতুন করে তৈরি করুন' : 'প্রশ্নপত্র তৈরি করুন'}
+                  {generatedCount > 0 ? t('paperBuilder.regeneratePaper') : t('paperBuilder.generatePaper')}
                 </>
               )}
             </Button>
