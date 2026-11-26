@@ -239,11 +239,17 @@ export function PaperBuilderStepper({
                   onValueChange={(val) => val && onChange({ ...config, paperLanguage: val as 'en' | 'bn' })}
                 >
                   <SelectTrigger className="h-9">
-                    <SelectValue />
+                    <SelectValue>
+                      {config.paperLanguage === 'bn' ? (
+                        <span className="font-bengali">বাংলা</span>
+                      ) : (
+                        'English'
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">{t('paperBuilder.english')}</SelectItem>
-                    <SelectItem value="bn" className="font-bengali">{t('paperBuilder.bangla')}</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="bn" className="font-bengali">বাংলা</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

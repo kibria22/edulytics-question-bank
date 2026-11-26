@@ -246,12 +246,24 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                             <div className="flex-1">
                               <div className="flex items-start gap-3">
                                 <span className="font-bold text-base">
-                                  {toBengaliNumber(currentNum)}.
+                                  {formatNumber(currentNum, paperLang)}.
                                 </span>
                                 <div className="flex-1">
                                   <div className="text-base mb-3">
                                     {renderMath(question.stem)}
                                   </div>
+                                  
+                                  {/* Multi-statement MCQ: show statements */}
+                                  {question.mcqKind === 'multi-statement' && question.statements && question.statements.length > 0 && (
+                                    <div className="ml-4 mb-3 space-y-1">
+                                      {question.statements.map((stmt, sIdx) => (
+                                        <div key={sIdx} className="flex gap-2">
+                                          <span className="font-semibold">{stmt.key}.</span>
+                                          <span>{renderMath(stmt.text)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                   
                                   {question.options && question.options.length > 0 && (
                                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 ml-4">
@@ -267,7 +279,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                               </div>
                             </div>
                             <div className="text-right font-semibold w-8">
-                              {toBengaliNumber(section.marksEach)}
+                              {formatNumber(section.marksEach, paperLang)}
                             </div>
                           </div>
                         )}
@@ -277,7 +289,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                           <div>
                             <div className="flex items-start gap-3 mb-3">
                               <span className="font-bold text-base">
-                                {toBengaliNumber(currentNum)}.
+                                {formatNumber(currentNum, paperLang)}.
                               </span>
                               <div className="flex-1 text-base">
                                 {renderMath(question.stem)}
@@ -308,7 +320,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                             <div className="flex-1">
                               <div className="flex items-start gap-3">
                                 <span className="font-bold text-base">
-                                  {toBengaliNumber(currentNum)}.
+                                  {formatNumber(currentNum, paperLang)}.
                                 </span>
                                 <div className="flex-1 text-base">
                                   {renderMath(question.stem)}
@@ -316,7 +328,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                               </div>
                             </div>
                             <div className="text-right font-semibold w-8">
-                              {toBengaliNumber(section.marksEach)}
+                              {formatNumber(section.marksEach, paperLang)}
                             </div>
                           </div>
                         )}
