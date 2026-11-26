@@ -12,19 +12,21 @@ import {
   Library,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n/context';
 
 const navItems = [
-  { icon: BookOpen, label: 'Dashboard', href: '/curriculum' },
-  { icon: Database, label: 'Question Bank', href: '/questions' },
-  { icon: FileEdit, label: 'Question Editor', href: '/editor' },
-  { icon: Sparkles, label: 'AI Generator', href: '/ai-generator' },
-  { icon: FileQuestion, label: 'Solutions & Hints', href: '/solutions' },
-  { icon: FileSpreadsheet, label: 'Paper Builder', href: '/paper-builder' },
-  { icon: Library, label: 'Sources', href: '/sources' },
+  { icon: BookOpen, labelKey: 'sidebar.dashboard', href: '/curriculum' },
+  { icon: Database, labelKey: 'sidebar.questionBank', href: '/questions' },
+  { icon: FileEdit, labelKey: 'sidebar.questionEditor', href: '/editor' },
+  { icon: Sparkles, labelKey: 'sidebar.aiGenerator', href: '/ai-generator' },
+  { icon: FileQuestion, labelKey: 'sidebar.solutionsHints', href: '/solutions' },
+  { icon: FileSpreadsheet, labelKey: 'sidebar.paperBuilder', href: '/paper-builder' },
+  { icon: Library, labelKey: 'sidebar.sources', href: '/sources' },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t, language } = useI18n();
 
   const isActive = (href: string) => pathname === href;
 
@@ -57,13 +59,14 @@ export function Sidebar() {
                 href={item.href}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                  language === 'bn' && 'font-bengali',
                   isActive(item.href)
                     ? 'bg-edulytics-primary-light text-edulytics-primary font-medium'
                     : 'text-edulytics-text hover:bg-gray-50'
                 )}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -72,8 +75,8 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="p-4 border-t border-edulytics-border">
-        <p className="text-xs text-edulytics-muted text-center">
-          Developed by Edulytics
+        <p className={cn('text-xs text-edulytics-muted text-center', language === 'bn' && 'font-bengali')}>
+          {t('common.developedBy')}
         </p>
       </div>
     </aside>

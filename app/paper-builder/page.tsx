@@ -40,11 +40,44 @@ export interface PaperSection {
 export default function PaperBuilderPage() {
   const [config, setConfig] = useState<PaperConfig>({
     paperType: 'exam',
-    paperTitle: '',
-    sections: [],
+    paperTitle: 'Mid-term Exam 2024',
+    schoolName: 'Dhaka Model High School',
+    duration: 180,
+    fullMarks: 100,
+    sections: [
+      {
+        id: '1',
+        title: 'Multiple Choice Questions',
+        type: 'mcq',
+        questionsNeeded: 25,
+        marksEach: 1,
+        difficulty: 'mixed',
+        questions: [],
+      },
+      {
+        id: '2',
+        title: 'Creative Questions',
+        type: 'cq',
+        questionsNeeded: 5,
+        questionsToAnswer: 5,
+        marksEach: 10,
+        difficulty: 'mixed',
+        questions: [],
+      },
+    ],
   });
 
   const [generating, setGenerating] = useState(false);
+
+  // Auto-generate on mount if no questions exist
+  useEffect(() => {
+    const hasQuestions = config.sections.some(s => s.questions.length > 0);
+    if (!hasQuestions && config.sections.length > 0) {
+      // Small delay to ensure component is mounted
+      setTimeout(() => handleGenerate(), 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGenerate = async () => {
     setGenerating(true);

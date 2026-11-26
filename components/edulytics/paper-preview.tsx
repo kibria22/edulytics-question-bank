@@ -133,9 +133,9 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
         </div>
       </div>
 
-      {/* Paper Preview */}
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none">
-        <div className="max-w-4xl mx-auto p-12 print:p-8 font-bengali" style={{ fontFamily: 'Noto Sans Bengali, sans-serif' }}>
+      {/* Paper Preview - Full Width A4 */}
+      <div className="bg-white shadow-xl rounded-lg overflow-hidden print:shadow-none print:rounded-none">
+        <div className="w-full p-12 print:p-8 font-bengali" style={{ fontFamily: 'Noto Sans Bengali, sans-serif', maxWidth: '210mm', margin: '0 auto' }}>
           {/* Header */}
           <div className="text-center mb-8 pb-6 border-b-2 border-gray-300">
             {config.schoolName && (

@@ -120,6 +120,7 @@ export function PaperBuilderStepper({
       type: 'mcq',
       questionsNeeded: 10,
       marksEach: 1,
+      difficulty: 'mixed',
       questions: [],
     };
     onChange({ ...config, sections: [...config.sections, newSection] });
