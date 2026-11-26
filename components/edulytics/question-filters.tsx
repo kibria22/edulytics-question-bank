@@ -333,7 +333,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.boardId || 'all'}
           onValueChange={(val) => updateFilter('boardId', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.boardId ? boards.find(b => b._id === values.boardId)?.name.en : 'Board'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -351,7 +351,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           onValueChange={(val) => updateFilter('levelId', val === 'all' ? undefined : val)}
           disabled={!values.boardId}
         >
-          <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.levelId ? levels.find(l => l._id === values.levelId)?.name.en : 'Class'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -369,7 +369,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           onValueChange={(val) => updateFilter('groupId', val === 'all' ? undefined : val)}
           disabled={!values.levelId}
         >
-          <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.groupId ? groups.find(g => g._id === values.groupId)?.name.en : 'Group'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -387,7 +387,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           onValueChange={(val) => updateFilter('subjectId', val === 'all' ? undefined : val)}
           disabled={!values.groupId}
         >
-          <SelectTrigger className="w-32 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-36 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.subjectId ? subjects.find(s => s._id === values.subjectId)?.name.en : 'Subject'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -405,7 +405,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           onValueChange={(val) => updateFilter('chapterId', val === 'all' ? undefined : val)}
           disabled={!values.subjectId}
         >
-          <SelectTrigger className="w-28 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-32 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.chapterId ? chapters.find(c => c._id === values.chapterId)?.name.en : 'Chapter'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -424,7 +424,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
             onValueChange={(val) => updateFilter('subchapterId', val === 'all' ? undefined : val)}
             disabled={!values.chapterId}
           >
-            <SelectTrigger className="w-28 h-7 text-[10px] border-edulytics-border">
+            <SelectTrigger className="w-32 h-8 text-xs border-edulytics-border">
               <SelectValue>{values.subchapterId ? subchapters.find(s => s._id === values.subchapterId)?.name.en : 'Sub-chapter'}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -443,7 +443,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           onValueChange={(val) => updateFilter('topicId', val === 'all' ? undefined : val)}
           disabled={!values.chapterId && !values.subchapterId}
         >
-          <SelectTrigger className="w-28 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-32 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.topicId ? topics.find(t => t._id === values.topicId)?.name.en : 'Topic'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -463,7 +463,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.type || 'all'}
           onValueChange={(val) => updateFilter('type', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-20 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-24 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.type ? values.type.toUpperCase() : 'Type'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -481,7 +481,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
             value={values.mcqKind || 'all'}
             onValueChange={(val) => updateFilter('mcqKind', val === 'all' ? undefined : val)}
           >
-            <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+            <SelectTrigger className="w-32 h-8 text-xs border-edulytics-border">
               <SelectValue>{values.mcqKind ? values.mcqKind.replace('_', ' ') : 'MCQ Kind'}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -499,7 +499,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.difficulty || 'all'}
           onValueChange={(val) => updateFilter('difficulty', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.difficulty ? values.difficulty.charAt(0).toUpperCase() + values.difficulty.slice(1) : 'Difficulty'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -516,8 +516,8 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.language || 'all'}
           onValueChange={(val) => updateFilter('language', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-20 h-7 text-[10px] border-edulytics-border">
-            <SelectValue>{values.language === 'bn' ? 'Bangla' : values.language === 'en' ? 'English' : 'Lang'}</SelectValue>
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
+            <SelectValue>{values.language === 'bn' ? 'Bangla' : values.language === 'en' ? 'English' : 'Language'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
@@ -531,7 +531,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.sourceType || 'all'}
           onValueChange={(val) => updateFilter('sourceType', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-24 h-7 text-[10px] border-edulytics-border">
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
             <SelectValue>{values.sourceType ? values.sourceType.replace('_', ' ') : 'Source'}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -545,48 +545,48 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
         </Select>
 
         {filterOptions.hasSolutions && (
-          <div className="flex items-center gap-1 px-2 h-7 border border-edulytics-border rounded text-[10px]">
+          <div className="flex items-center gap-1.5 px-2 h-8 border border-edulytics-border rounded">
             <Checkbox
               id="hasSolution"
               checked={values.hasSolution || false}
               onCheckedChange={(checked) => updateFilter('hasSolution', checked as boolean)}
-              className="h-3 w-3"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="hasSolution" className="text-[10px] text-edulytics-text cursor-pointer">
+            <Label htmlFor="hasSolution" className="text-xs text-edulytics-text cursor-pointer">
               Solution
             </Label>
           </div>
         )}
 
         {filterOptions.hasMedia && (
-          <div className="flex items-center gap-1 px-2 h-7 border border-edulytics-border rounded text-[10px]">
+          <div className="flex items-center gap-1.5 px-2 h-8 border border-edulytics-border rounded">
             <Checkbox
               id="hasMedia"
               checked={values.hasMedia || false}
               onCheckedChange={(checked) => updateFilter('hasMedia', checked as boolean)}
-              className="h-3 w-3"
+              className="h-3.5 w-3.5"
             />
-            <Label htmlFor="hasMedia" className="text-[10px] text-edulytics-text cursor-pointer">
+            <Label htmlFor="hasMedia" className="text-xs text-edulytics-text cursor-pointer">
               Media
             </Label>
           </div>
         )}
 
-        <div className="relative flex-1 min-w-[140px]">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-edulytics-muted" />
+        <div className="relative flex-1 min-w-[150px]">
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-edulytics-muted" />
           <Input
             placeholder="Search..."
             value={values.search || ''}
             onChange={(e) => updateFilter('search', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-            className="pl-7 h-7 text-[10px] border-edulytics-border"
+            className="pl-8 h-8 text-xs border-edulytics-border"
           />
         </div>
 
         <Button
           size="sm"
           onClick={onSearch}
-          className="h-7 px-2.5 text-[10px] bg-edulytics-primary text-white hover:bg-edulytics-primary/90"
+          className="h-8 px-3 text-xs bg-edulytics-primary text-white hover:bg-edulytics-primary/90"
         >
           Go
         </Button>

@@ -327,29 +327,32 @@ export default function DashboardPage() {
           <ResponsiveContainer width="100%" height={180}>
             <BarChart 
               data={curriculumData.slice(0, 10)} 
-              layout={curriculumData.length > 5 && curriculumData[0]?.nameBn ? 'horizontal' : 'vertical'}
+              layout="horizontal"
+              margin={{ right: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              {curriculumData.length > 5 && curriculumData[0]?.nameBn ? (
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
-              ) : (
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
-              )}
-              {curriculumData.length > 5 && curriculumData[0]?.nameBn ? (
-                <XAxis type="number" tick={{ fontSize: 10 }} />
-              ) : (
-                <YAxis tick={{ fontSize: 10 }} />
-              )}
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                tick={{ fontSize: 11 }} 
+                width={120}
+              />
+              <XAxis 
+                type="number" 
+                tick={{ fontSize: 10 }} 
+                allowDecimals={false}
+              />
               <Tooltip />
-              {showStacked && curriculumGroupBy !== 'type' ? (
+              {showStacked && curriculumGroupBy !== 'type' && curriculumGroupBy !== 'language' ? (
                 <>
                   <Legend iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
-                  <Bar dataKey="MCQ" stackId="a" fill="#3b82f6" maxBarSize={30} />
-                  <Bar dataKey="CQ" stackId="a" fill="#8b5cf6" maxBarSize={30} />
-                  <Bar dataKey="SQ" stackId="a" fill="#06b6d4" maxBarSize={30} />
+                  <Bar dataKey="MCQ" stackId="a" fill="#3b82f6" />
+                  <Bar dataKey="CQ" stackId="a" fill="#8b5cf6" />
+                  <Bar dataKey="SQ" stackId="a" fill="#06b6d4" />
+                  <Bar dataKey="Long" stackId="a" fill="#10b981" />
                 </>
               ) : (
-                <Bar dataKey="count" fill="#3b82f6" maxBarSize={35}>
+                <Bar dataKey="count" fill="#3b82f6" label={{ position: 'right', fontSize: 10 }}>
                   {curriculumData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={index === 0 ? '#1e40af' : '#3b82f6'} />
                   ))}
@@ -412,25 +415,31 @@ export default function DashboardPage() {
 
         <ContentCard className="h-[220px]">
           <h3 className="font-bold text-sm text-edulytics-text mb-3">Sources by Type</h3>
-          <div className="space-y-2.5">
-            {stats.sourceTypeDistribution.slice(0, 5).map((source, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between text-[10px] mb-1">
-                  <span className="text-edulytics-muted capitalize">{source.type.replace('_', ' ')}</span>
-                  <span className="font-semibold text-edulytics-text">{source.count}</span>
+          {stats.sourceTypeDistribution.length > 0 ? (
+            <div className="space-y-2.5">
+              {stats.sourceTypeDistribution.slice(0, 5).map((source, index) => (
+                <div key={index}>
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-edulytics-muted capitalize">{source.type.replace('_', ' ')}</span>
+                    <span className="font-semibold text-edulytics-text">{source.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${stats.kpis.totalQuestions > 0 ? (source.count / stats.kpis.totalQuestions) * 100 : 0}%`,
+                        backgroundColor: COLORS[index % COLORS.length],
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${stats.kpis.totalQuestions > 0 ? (source.count / stats.kpis.totalQuestions) * 100 : 0}%`,
-                      backgroundColor: COLORS[index % COLORS.length],
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-xs text-edulytics-muted">
+              No source data available
+            </div>
+          )}
         </ContentCard>
       </div>
 

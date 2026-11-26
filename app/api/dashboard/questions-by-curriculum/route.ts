@@ -43,7 +43,16 @@ export async function GET(request: Request) {
         });
       }
 
-      // Simple board grouping for demo
+      // Demo data with variety
+      if (groupBy === 'board') {
+        return NextResponse.json({
+          data: [
+            { name: 'NCTB', count: 8, MCQ: 5, CQ: 2, SQ: 1 },
+            { name: 'Madrasa', count: 1, MCQ: 1, CQ: 0, SQ: 0 },
+          ],
+        });
+      }
+      
       return NextResponse.json({
         data: [
           { name: 'NCTB', count: seedData.questions.length, MCQ: 5, CQ: 1, SQ: 0 },
