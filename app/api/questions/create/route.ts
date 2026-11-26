@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db/mongodb';
-import { computeContentHash, computeScope } from '@/lib/utils/question.utils';
+import { computeContentHash, computeScope, computeCurriculumNodeIds } from '@/lib/utils/question.utils';
 
 export async function POST(request: Request) {
   try {
@@ -8,9 +9,20 @@ export async function POST(request: Request) {
 
     const db = await getDb();
     const collection = db.collection('questions');
+    const curriculumCollection = db.collection('curriculum_nodes');
 
+    // Compute server-side fields
     const contentHash = computeContentHash(body);
     const scope = computeScope(body.institutionId, body.campusId);
+
+    // Compute curriculumNodeIds from topicIds and levelIds
+    const topicIds = (body.topicIds || []).map((id: string) => new ObjectId(id));
+    const levelIds = (body.levelIds || []).map((id: string) => new ObjectId(id));
+    const curriculumNodeIds = await computeCurriculumNodeIds(
+      topicIds,
+      levelIds,
+      curriculumCollection
+    );
 
     const existing = await collection.findOne({
       contentHash,
@@ -28,11 +40,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Build the question document with server-computed fields
+    // Note: NO status field is added (as per schema requirements)
     const question = {
       ...body,
       contentHash,
       scope,
-      curriculumNodeIds: body.curriculumNodeIds || [],
+      curriculumNodeIds,
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
