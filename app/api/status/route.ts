@@ -21,9 +21,18 @@ export async function GET() {
   let dbConnected = false;
   let dbHasData = false;
   let connectionError: string | null = null;
+  let dbName: string | null = null;
+  let clusterHost: string | null = null;
 
   if (hasMongoUri) {
     try {
+      const uri = process.env.MONGODB_URI!;
+      const url = new URL(uri.replace('mongodb+srv://', 'https://').replace('mongodb://', 'http://'));
+      clusterHost = url.hostname;
+      
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      dbName = pathParts[0] || 'edulytics';
+
       const db = await getDb();
       await db.admin().ping();
       dbConnected = true;
@@ -50,5 +59,7 @@ export async function GET() {
     dbConnected,
     dbHasData,
     connectionError,
+    dbName,
+    clusterHost,
   });
 }

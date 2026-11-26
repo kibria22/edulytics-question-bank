@@ -9,12 +9,24 @@ export async function GET(request: Request) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const type = url.searchParams.get('type');
+    const mcqKind = url.searchParams.get('mcqKind');
     const difficulty = url.searchParams.get('difficulty');
     const search = url.searchParams.get('search');
+    const levelId = url.searchParams.get('levelId');
+    const subjectId = url.searchParams.get('subjectId');
+    const chapterId = url.searchParams.get('chapterId');
+    const topicId = url.searchParams.get('topicId');
+    const sourceType = url.searchParams.get('sourceType');
+    const sourceId = url.searchParams.get('sourceId');
+    const minMarks = url.searchParams.get('minMarks');
+    const maxMarks = url.searchParams.get('maxMarks');
+    const hasSolution = url.searchParams.get('hasSolution');
+    const hasMedia = url.searchParams.get('hasMedia');
 
     // Demo mode: return fixture data if MongoDB is not configured
     if (!process.env.MONGODB_URI) {
       const { seedData } = await import('@/lib/db/seed');
+      const { ObjectId } = await import('mongodb');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let questions: any[] = seedData.questions.filter((q: any) => q.isActive);
 
@@ -22,8 +34,61 @@ export async function GET(request: Request) {
         questions = questions.filter((q: any) => q.type === type);
       }
 
+      if (mcqKind) {
+        questions = questions.filter((q: any) => q.mcqKind === mcqKind);
+      }
+
       if (difficulty) {
         questions = questions.filter((q: any) => q.difficulty === difficulty);
+      }
+
+      if (levelId) {
+        questions = questions.filter((q: any) =>
+          q.levelIds?.some((lid: any) => lid.toString() === levelId)
+        );
+      }
+
+      if (subjectId) {
+        questions = questions.filter((q: any) => q.subjectId?.toString() === subjectId);
+      }
+
+      if (chapterId) {
+        questions = questions.filter((q: any) => q.chapterId?.toString() === chapterId);
+      }
+
+      if (topicId) {
+        questions = questions.filter((q: any) =>
+          q.topicIds?.some((tid: any) => tid.toString() === topicId)
+        );
+      }
+
+      if (sourceType) {
+        questions = questions.filter((q: any) =>
+          q.sources?.some((s: any) => s.type === sourceType)
+        );
+      }
+
+      if (sourceId) {
+        questions = questions.filter((q: any) =>
+          q.sources?.some((s: any) => s.sourceId?.toString() === sourceId)
+        );
+      }
+
+      if (minMarks) {
+        questions = questions.filter((q: any) => (q.marks || 0) >= parseInt(minMarks));
+      }
+
+      if (maxMarks) {
+        questions = questions.filter((q: any) => (q.marks || 0) <= parseInt(maxMarks));
+      }
+
+      if (hasSolution === 'true') {
+        const solutionQids = new Set(seedData.solutions.map((s: any) => s.questionId.toString()));
+        questions = questions.filter((q: any) => solutionQids.has(q._id.toString()));
+      }
+
+      if (hasMedia === 'true') {
+        questions = questions.filter((q: any) => q.media && q.media.length > 0);
       }
 
       if (search) {
@@ -49,6 +114,7 @@ export async function GET(request: Request) {
 
     const db = await getDb();
     const collection = db.collection('questions');
+    const { ObjectId } = await import('mongodb');
 
     const filter: Record<string, unknown> = { isActive: true };
 
@@ -56,8 +122,54 @@ export async function GET(request: Request) {
       filter.type = type;
     }
 
+    if (mcqKind) {
+      filter.mcqKind = mcqKind;
+    }
+
     if (difficulty) {
       filter.difficulty = difficulty;
+    }
+
+    if (levelId) {
+      filter.levelIds = new ObjectId(levelId);
+    }
+
+    if (subjectId) {
+      filter.subjectId = new ObjectId(subjectId);
+    }
+
+    if (chapterId) {
+      filter.chapterId = new ObjectId(chapterId);
+    }
+
+    if (topicId) {
+      filter.topicIds = new ObjectId(topicId);
+    }
+
+    if (sourceType) {
+      filter['sources.type'] = sourceType;
+    }
+
+    if (sourceId) {
+      filter['sources.sourceId'] = new ObjectId(sourceId);
+    }
+
+    if (minMarks || maxMarks) {
+      filter.marks = {};
+      if (minMarks) {
+        (filter.marks as Record<string, unknown>).$gte = parseInt(minMarks);
+      }
+      if (maxMarks) {
+        (filter.marks as Record<string, unknown>).$lte = parseInt(maxMarks);
+      }
+    }
+
+    if (hasSolution === 'true') {
+      filter['sources.0'] = { $exists: true };
+    }
+
+    if (hasMedia === 'true') {
+      filter['media.0'] = { $exists: true };
     }
 
     if (search) {

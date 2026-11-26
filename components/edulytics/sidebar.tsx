@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { icon: BookOpen, label: 'Curriculum', href: '/curriculum' },
+  { icon: BookOpen, label: 'Dashboard', href: '/curriculum' },
   { icon: Database, label: 'Question Bank', href: '/questions' },
   { icon: FileEdit, label: 'Question Editor', href: '/editor' },
   { icon: Sparkles, label: 'AI Generator', href: '/ai-generator' },

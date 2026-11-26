@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/edulytics/page-header';
-import { FilterBar } from '@/components/edulytics/filter-bar';
 import { ContentCard } from '@/components/edulytics/content-card';
+import { QuestionFilters, QuestionFilterValues } from '@/components/edulytics/question-filters';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
+import { Loader2, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
 import { Question } from '@/lib/types';
 import dynamic from 'next/dynamic';
 
@@ -20,16 +18,14 @@ const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMat
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [filterValues, setFilterValues] = useState<QuestionFilterValues>({});
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadQuestions();
-  }, [page, typeFilter, difficultyFilter]);
+  }, [page]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -37,9 +33,12 @@ export default function QuestionsPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        ...(typeFilter !== 'all' && { type: typeFilter }),
-        ...(difficultyFilter !== 'all' && { difficulty: difficultyFilter }),
-        ...(search && { search }),
+      });
+
+      Object.entries(filterValues).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
       });
 
       const response = await fetch(`/api/questions?${params}`);
@@ -51,6 +50,11 @@ export default function QuestionsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    setPage(1);
+    loadQuestions();
   };
 
   const renderMarkdown = (text: string) => {
@@ -86,45 +90,12 @@ export default function QuestionsPage() {
         }
       />
 
-      <FilterBar>
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-edulytics-muted" />
-          <Input
-            placeholder="Search by question text..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && loadQuestions()}
-            className="pl-9 h-9 text-sm border-edulytics-border"
-          />
-        </div>
-        
-        <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
-          <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="All Types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="mcq">MCQ</SelectItem>
-            <SelectItem value="cq">CQ</SelectItem>
-            <SelectItem value="sq">SQ</SelectItem>
-            <SelectItem value="tf">True/False</SelectItem>
-            <SelectItem value="short">Short</SelectItem>
-            <SelectItem value="long">Long</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={difficultyFilter} onValueChange={(val) => val && setDifficultyFilter(val)}>
-          <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="All Difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Difficulty</SelectItem>
-            <SelectItem value="easy">Easy</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="hard">Hard</SelectItem>
-          </SelectContent>
-        </Select>
-      </FilterBar>
+      <QuestionFilters
+        values={filterValues}
+        onChange={setFilterValues}
+        onSearch={handleSearch}
+        resultCount={total}
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
