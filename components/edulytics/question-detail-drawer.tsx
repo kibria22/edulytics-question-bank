@@ -367,6 +367,22 @@ export function QuestionDetailDrawer({ question, onClose, onEdit }: QuestionDeta
               variant="outline"
               size="sm"
               className="w-full text-red-600 border-red-300 hover:bg-red-50"
+              onClick={async () => {
+                const note = prompt('Describe the error:');
+                if (!note) return;
+                
+                try {
+                  await fetch(`/api/questions/${question._id.toString()}/flag`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ note }),
+                  });
+                  alert('Error reported successfully');
+                } catch (error) {
+                  console.error('Error reporting:', error);
+                  alert('Failed to report error');
+                }
+              }}
             >
               <Flag className="h-3.5 w-3.5 mr-2" />
               Report Error

@@ -8,6 +8,8 @@ import { ContentCard } from '@/components/edulytics/content-card';
 import { QuestionFilters, QuestionFilterValues } from '@/components/edulytics/question-filters';
 import { LeftFilterRail } from '@/components/edulytics/left-filter-rail';
 import { QuestionDetailDrawer } from '@/components/edulytics/question-detail-drawer';
+import { QuestionEditForm } from '@/components/edulytics/question-edit-form';
+import { QuestionHistory } from '@/components/edulytics/question-history';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Eye, MoreVertical, Plus, BookOpen } from 'lucide-react';
@@ -36,6 +38,8 @@ export default function QuestionsPage() {
   const [leftRailOpen, setLeftRailOpen] = useState(true);
   const [defaultFilters, setDefaultFilters] = useState<DefaultFilters | null>(null);
   const [questionSolutions, setQuestionSolutions] = useState<Record<string, QuestionSolution[]>>({});
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [viewingHistory, setViewingHistory] = useState<string | null>(null);
 
   // Load default filters on mount
   useEffect(() => {
@@ -412,10 +416,41 @@ export default function QuestionsPage() {
             question={selectedQuestion}
             onClose={() => setSelectedQuestion(null)}
             onEdit={(q) => {
-              console.log('Edit question:', q);
-              // Will implement in STEP C
+              setEditingQuestion(q);
+              setSelectedQuestion(null);
             }}
           />
+
+          {/* Edit Form */}
+          {editingQuestion && (
+            <QuestionEditForm
+              question={editingQuestion}
+              onClose={() => setEditingQuestion(null)}
+              onSave={(updatedQuestion) => {
+                // Refresh the question list
+                loadQuestions();
+                setEditingQuestion(null);
+                alert('Question updated successfully');
+              }}
+              onViewHistory={() => {
+                setViewingHistory(editingQuestion._id.toString());
+              }}
+            />
+          )}
+
+          {/* History Viewer */}
+          {viewingHistory && (
+            <QuestionHistory
+              questionId={viewingHistory}
+              onClose={() => setViewingHistory(null)}
+              onRevert={() => {
+                // Refresh the question list
+                loadQuestions();
+                setViewingHistory(null);
+                alert('Question reverted successfully');
+              }}
+            />
+          )}
         </div>
       </div>
     </AppShell>
