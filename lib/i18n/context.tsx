@@ -166,6 +166,18 @@ const translations: Record<Language, Record<string, string>> = {
     'paperBuilder.sqSection': 'Short Questions',
     'paperBuilder.shortSection': 'Short Questions',
     'paperBuilder.longSection': 'Long Questions',
+    'paperBuilder.paperLanguage': 'Paper Language',
+    'paperBuilder.english': 'English',
+    'paperBuilder.bangla': 'Bangla',
+    'paperBuilder.answerAnyN': 'Answer any {n}',
+    'paperBuilder.rightNumberIndicatesMarks': '[The number on the right indicates full marks.]',
+    
+    // Question types
+    'questionType.mcq': 'Multiple Choice (MCQ)',
+    'questionType.cq': 'Creative (CQ)',
+    'questionType.sq': 'Short (SQ)',
+    'questionType.short': 'Short Question',
+    'questionType.long': 'Long Question',
     
     // Filters
     'filters.board': 'Board',
@@ -306,6 +318,18 @@ const translations: Record<Language, Record<string, string>> = {
     'paperBuilder.sqSection': 'সংক্ষিপ্ত প্রশ্ন',
     'paperBuilder.shortSection': 'ছোট প্রশ্ন',
     'paperBuilder.longSection': 'বড় প্রশ্ন',
+    'paperBuilder.paperLanguage': 'কাগজের ভাষা',
+    'paperBuilder.english': 'ইংরেজি',
+    'paperBuilder.bangla': 'বাংলা',
+    'paperBuilder.answerAnyN': 'যে কোনো {n}টি উত্তর দাও',
+    'paperBuilder.rightNumberIndicatesMarks': '[ডান পাশের সংখ্যা প্রশ্নের পূর্ণমান জ্ঞাপক।]',
+    
+    // Question types
+    'questionType.mcq': 'বহুনির্বাচনি (MCQ)',
+    'questionType.cq': 'সৃজনশীল (CQ)',
+    'questionType.sq': 'সংক্ষিপ্ত (SQ)',
+    'questionType.short': 'ছোট প্রশ্ন',
+    'questionType.long': 'বড় প্রশ্ন',
     
     // Filters
     'filters.board': 'বোর্ড',

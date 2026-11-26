@@ -7,6 +7,8 @@ import { Button } from '../ui/button';
 import { Question } from '@/lib/types';
 import { Printer, Download, Shuffle, Eye, EyeOff, GripVertical, RefreshCw, Flag } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useI18n } from '@/lib/i18n/context';
+import { cn } from '@/lib/utils';
 
 const InlineMath = dynamic(() => import('react-katex').then(mod => mod.InlineMath), { ssr: false });
 
@@ -25,11 +27,20 @@ function toBengaliNumber(num: number): string {
     .join('');
 }
 
-const mcqOptions = ['ক', 'খ', 'গ', 'ঘ'];
+function formatNumber(num: number, language: 'en' | 'bn'): string {
+  return language === 'bn' ? toBengaliNumber(num) : String(num);
+}
+
+const mcqOptionsBn = ['ক', 'খ', 'গ', 'ঘ'];
+const mcqOptionsEn = ['a', 'b', 'c', 'd'];
 
 export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: PreviewProps) {
+  const { t, language: uiLanguage } = useI18n();
   const [showEditControls, setShowEditControls] = useState(true);
   const [draggedItem, setDraggedItem] = useState<{ sectionId: string; index: number } | null>(null);
+  
+  const paperLang = config.paperLanguage || 'bn';
+  const mcqOptions = paperLang === 'bn' ? mcqOptionsBn : mcqOptionsEn;
 
   const renderMath = (text: string) => {
     const parts = text.split(/(\$[^$]+\$)/g);
@@ -82,11 +93,11 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
         <ContentCard className="max-w-md text-center">
           <div className="py-12">
             <Eye className="h-16 w-16 mx-auto mb-4 text-edulytics-muted/50" />
-            <h3 className="text-lg font-bold text-edulytics-text mb-2 font-bengali">
-              প্রশ্নপত্র প্রিভিউ
+            <h3 className={cn("text-lg font-bold text-edulytics-text mb-2", uiLanguage === 'bn' && 'font-bengali')}>
+              {t('paperBuilder.preview')}
             </h3>
-            <p className="text-sm text-edulytics-muted font-bengali">
-              প্রশ্নপত্র তৈরি করার পর এখানে দেখতে পাবেন
+            <p className={cn("text-sm text-edulytics-muted", uiLanguage === 'bn' && 'font-bengali')}>
+              {t('paperBuilder.previewMessage')}
             </p>
           </div>
         </ContentCard>
@@ -105,10 +116,10 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
             variant="outline"
             size="sm"
             onClick={() => setShowEditControls(!showEditControls)}
-            className="border-edulytics-border font-bengali"
+            className={cn("border-edulytics-border", uiLanguage === 'bn' && 'font-bengali')}
           >
             {showEditControls ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-            {showEditControls ? 'এডিট মোড বন্ধ' : 'এডিট মোড চালু'}
+            {showEditControls ? t('paperBuilder.editModeOn') : t('paperBuilder.editModeOff')}
           </Button>
         </div>
 
@@ -117,18 +128,18 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
             variant="outline"
             size="sm"
             onClick={handlePrint}
-            className="border-edulytics-border font-bengali"
+            className={cn("border-edulytics-border", uiLanguage === 'bn' && 'font-bengali')}
           >
             <Printer className="h-4 w-4 mr-2" />
-            প্রিন্ট
+            {t('paperBuilder.print')}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="border-edulytics-border font-bengali"
+            className={cn("border-edulytics-border", uiLanguage === 'bn' && 'font-bengali')}
           >
             <Download className="h-4 w-4 mr-2" />
-            PDF ডাউনলোড
+            {t('paperBuilder.downloadPdf')}
           </Button>
         </div>
       </div>
@@ -151,22 +162,22 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
               <div className="text-left">
                 {config.classId && (
                   <div>
-                    <span className="font-semibold">শ্রেণি:</span>{' '}
+                    <span className="font-semibold">{paperLang === 'bn' ? 'শ্রেণি:' : 'Class:'}</span>{' '}
                     <span>{/* Class name would go here */}</span>
                   </div>
                 )}
                 {config.duration && (
                   <div>
-                    <span className="font-semibold">সময়:</span>{' '}
-                    <span>{toBengaliNumber(config.duration)} মিনিট</span>
+                    <span className="font-semibold">{paperLang === 'bn' ? 'সময়:' : 'Time:'}</span>{' '}
+                    <span>{formatNumber(config.duration, paperLang)} {paperLang === 'bn' ? 'মিনিট' : 'minutes'}</span>
                   </div>
                 )}
               </div>
               <div className="text-right">
                 {config.fullMarks && (
                   <div>
-                    <span className="font-semibold">পূর্ণমান:</span>{' '}
-                    <span className="text-lg">{toBengaliNumber(config.fullMarks)}</span>
+                    <span className="font-semibold">{paperLang === 'bn' ? 'পূর্ণমান:' : 'Full Marks:'}</span>{' '}
+                    <span className="text-lg">{formatNumber(config.fullMarks, paperLang)}</span>
                   </div>
                 )}
               </div>
@@ -186,20 +197,26 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                 <div className="bg-gray-100 border-l-4 border-edulytics-primary p-3 mb-4 flex items-center justify-between print:bg-gray-200">
                   <h3 className="text-lg font-bold">{section.title}</h3>
                   <div className="text-sm">
-                    <span className="font-semibold">মান:</span>{' '}
-                    {toBengaliNumber(section.marksEach)} × {toBengaliNumber(section.questionsNeeded)} = {toBengaliNumber(totalMarks)}
+                    <span className="font-semibold">{paperLang === 'bn' ? 'মান:' : 'Marks:'}</span>{' '}
+                    {formatNumber(section.marksEach, paperLang)} × {formatNumber(section.questionsNeeded, paperLang)} = {formatNumber(totalMarks, paperLang)}
                   </div>
                 </div>
 
                 {section.questionsToAnswer && section.questionsToAnswer < section.questionsNeeded && (
                   <p className="text-sm text-gray-600 mb-4 italic">
-                    [যে কোনো {toBengaliNumber(section.questionsToAnswer)}টি প্রশ্নের উত্তর দাও।]
+                    [{paperLang === 'bn' 
+                      ? `যে কোনো ${formatNumber(section.questionsToAnswer, paperLang)}টি প্রশ্নের উত্তর দাও।`
+                      : `Answer any ${section.questionsToAnswer} questions.`
+                    }]
                   </p>
                 )}
 
                 {section.type === 'mcq' && (
                   <p className="text-xs text-gray-600 mb-4 italic">
-                    [ডান পাশের সংখ্যা প্রশ্নের পূর্ণমান জ্ঞাপক।]
+                    [{paperLang === 'bn' 
+                      ? 'ডান পাশের সংখ্যা প্রশ্নের পূর্ণমান জ্ঞাপক।'
+                      : 'The number on the right indicates full marks.'
+                    }]
                   </p>
                 )}
 
@@ -276,7 +293,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                                       <span>{renderMath(part.prompt)}</span>
                                     </div>
                                     <span className="font-semibold text-right w-8">
-                                      {toBengaliNumber(part.marks || 0)}
+                                      {formatNumber(part.marks || 0, paperLang)}
                                     </span>
                                   </div>
                                 ))}
@@ -322,18 +339,18 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                               variant="ghost"
                               size="sm"
                               onClick={() => onSwapQuestion(section.id, qIndex)}
-                              className="h-7 text-xs hover:bg-blue-50 text-blue-600 font-bengali"
+                              className={cn("h-7 text-xs hover:bg-blue-50 text-blue-600", uiLanguage === 'bn' && 'font-bengali')}
                             >
                               <RefreshCw className="h-3 w-3 mr-1" />
-                              বদলাও
+                              {t('paperBuilder.swap')}
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 text-xs hover:bg-red-50 text-red-600 font-bengali"
+                              className={cn("h-7 text-xs hover:bg-red-50 text-red-600", uiLanguage === 'bn' && 'font-bengali')}
                             >
                               <Flag className="h-3 w-3 mr-1" />
-                              ভুল রিপোর্ট করুন
+                              {t('paperBuilder.reportError')}
                             </Button>
                           </div>
                         )}

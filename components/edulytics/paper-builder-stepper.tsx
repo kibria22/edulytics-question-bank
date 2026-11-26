@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { ChevronDown, ChevronRight, Plus, Trash2, Sparkles, AlertCircle } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { useI18n } from '@/lib/i18n/context';
+import { cn } from '@/lib/utils';
 
 interface StepperProps {
   config: PaperConfig;
@@ -36,6 +38,7 @@ export function PaperBuilderStepper({
   totalQuestions,
   generatedCount,
 }: StepperProps) {
+  const { t, language } = useI18n();
   const [currentStep, setCurrentStep] = useState(1);
   const [boards, setBoards] = useState<CurriculumNode[]>([]);
   const [classes, setClasses] = useState<CurriculumNode[]>([]);
@@ -160,11 +163,11 @@ export function PaperBuilderStepper({
   return (
     <div className="space-y-4 pb-6">
       <div className="sticky top-0 bg-white z-10 pb-4">
-        <h2 className="text-lg font-bold text-edulytics-text font-bengali">
-          পরীক্ষার প্রশ্নপত্র তৈরি করুন
+        <h2 className={cn("text-lg font-bold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+          {t('paperBuilder.title')}
         </h2>
-        <p className="text-xs text-edulytics-muted">
-          নিচের ধাপগুলি অনুসরণ করুন
+        <p className={cn("text-xs text-edulytics-muted", language === 'bn' && 'font-bengali')}>
+          {t('paperBuilder.subtitle')}
         </p>
       </div>
 

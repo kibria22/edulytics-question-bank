@@ -9,6 +9,7 @@ import { Question } from '@/lib/types';
 export interface PaperConfig {
   paperType: 'exam' | 'assignment';
   paperTitle: string;
+  paperLanguage: 'en' | 'bn'; // Language of the paper content (not UI)
   schoolName?: string;
   examName?: string;
   duration?: number;
@@ -40,10 +41,11 @@ export interface PaperSection {
 export default function PaperBuilderPage() {
   const [config, setConfig] = useState<PaperConfig>({
     paperType: 'exam',
-    paperTitle: 'Mid-term Exam 2024',
+    paperTitle: 'Half-yearly Exam 2026',
+    paperLanguage: 'bn', // Default to Bangla paper content
     schoolName: 'Dhaka Model High School',
     duration: 180,
-    fullMarks: 100,
+    fullMarks: 75, // Matches section total: 25×1 + 5×10 = 75
     sections: [
       {
         id: '1',
