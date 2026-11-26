@@ -20,9 +20,9 @@ export default function Home() {
 
     const checkSetup = async () => {
       try {
-        const response = await fetch('/api/db/check');
+        const response = await fetch('/api/status');
         const data = await response.json();
-        if (data.connected) {
+        if (data.dbConnected && data.dbHasData) {
           setSetupComplete(true);
         }
       } catch (error) {

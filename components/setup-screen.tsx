@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,11 +10,45 @@ interface SetupScreenProps {
   onSetupComplete: () => void;
 }
 
+interface StatusData {
+  hasMongoUri: boolean;
+  hasAppPassword: boolean;
+  dbConnected: boolean;
+  dbHasData: boolean;
+  connectionError: string | null;
+}
+
 export function SetupScreen({ onSetupComplete }: SetupScreenProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState<StatusData | null>(null);
+
+  useEffect(() => {
+    checkStatus();
+  }, []);
+
+  const checkStatus = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/status');
+      const data = await response.json();
+      setStatus(data);
+
+      if (data.dbConnected && data.dbHasData) {
+        setTimeout(() => {
+          onSetupComplete();
+        }, 500);
+      } else if (data.connectionError) {
+        setError(data.connectionError);
+      }
+    } catch (err) {
+      setError('Error checking system status');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSeed = async () => {
     setSeeding(true);
@@ -43,26 +77,16 @@ export function SetupScreen({ onSetupComplete }: SetupScreenProps) {
     }
   };
 
-  const handleTestConnection = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/db/check');
-      const data = await response.json();
-
-      if (data.connected) {
-        setError('');
-        await handleSeed();
-      } else {
-        setError('Cannot connect to MongoDB. Please check your MONGODB_URI environment variable.');
-      }
-    } catch (err) {
-      setError('Error checking database connection');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading && !status) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+          <p className="text-muted-foreground">Checking system status...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
@@ -71,39 +95,65 @@ export function SetupScreen({ onSetupComplete }: SetupScreenProps) {
           <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Database className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Database Setup Required</CardTitle>
+          <CardTitle className="text-2xl">Database Setup</CardTitle>
           <CardDescription>
-            MongoDB connection is not configured or the database needs seeding
+            {status?.dbConnected && !status?.dbHasData
+              ? 'Database connected but needs initialization'
+              : !status?.hasMongoUri
+              ? 'MongoDB connection not configured'
+              : !status?.dbConnected
+              ? 'Cannot connect to MongoDB'
+              : 'Checking database status...'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-muted p-4 rounded-lg space-y-3">
-            <h3 className="font-semibold text-sm">Environment Variables</h3>
+            <h3 className="font-semibold text-sm">System Status</h3>
             <div className="space-y-2 text-sm font-mono">
               <div className="flex items-center justify-between">
                 <span>MONGODB_URI</span>
                 <span className="text-muted-foreground">
-                  {process.env.MONGODB_URI ? '✓ Set' : '✗ Not set'}
+                  {status?.hasMongoUri ? '✓ Set' : '✗ Not set'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>APP_PASSWORD</span>
                 <span className="text-muted-foreground">
-                  {process.env.APP_PASSWORD ? '✓ Set' : '✗ Not set'}
+                  {status?.hasAppPassword ? '✓ Set' : '✗ Not set'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Database Connection</span>
+                <span className="text-muted-foreground">
+                  {status?.dbConnected ? '✓ Connected' : '✗ Not connected'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Database Data</span>
+                <span className="text-muted-foreground">
+                  {status?.dbHasData ? '✓ Has data' : '✗ Empty'}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              <p className="mb-2">To set up the application:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Add MONGODB_URI to your .env.local file</li>
-                <li>Restart the development server</li>
-                <li>Click "Seed Database" to initialize with sample data</li>
-              </ol>
-            </div>
+            {!status?.hasMongoUri && (
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2">To configure the database:</p>
+                <ol className="list-decimal list-inside space-y-1 ml-2">
+                  <li>Add MONGODB_URI to your environment variables</li>
+                  <li>Restart the application</li>
+                  <li>Return here to initialize the database</li>
+                </ol>
+              </div>
+            )}
+
+            {status?.hasMongoUri && status?.dbConnected && !status?.dbHasData && (
+              <div className="text-sm text-muted-foreground">
+                <p>Database is connected but empty. Click "Seed Database" to initialize with sample data.</p>
+              </div>
+            )}
 
             {error && (
               <Alert variant="destructive">
@@ -121,26 +171,29 @@ export function SetupScreen({ onSetupComplete }: SetupScreenProps) {
           </div>
 
           <div className="flex gap-3">
-            <Button
-              onClick={handleTestConnection}
-              disabled={loading || seeding || success}
-              className="flex-1"
-            >
-              {loading || seeding ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {seeding ? 'Seeding...' : 'Checking...'}
-                </>
-              ) : (
-                'Seed Database'
-              )}
-            </Button>
+            {status?.dbConnected && !status?.dbHasData && (
+              <Button
+                onClick={handleSeed}
+                disabled={seeding || success}
+                className="flex-1"
+              >
+                {seeding ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Seeding...
+                  </>
+                ) : (
+                  'Seed Database'
+                )}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={onSetupComplete}
-              disabled={loading || seeding}
+              disabled={seeding}
+              className={!status?.dbConnected || status?.dbHasData ? 'flex-1' : ''}
             >
-              Skip (Use without DB)
+              {status?.dbHasData ? 'Continue' : 'Skip (Use without DB)'}
             </Button>
           </div>
         </CardContent>

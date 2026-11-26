@@ -3,6 +3,8 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db/mongodb';
 import { computeContentHash, computeScope, computeCurriculumNodeIds } from '@/lib/utils/question.utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

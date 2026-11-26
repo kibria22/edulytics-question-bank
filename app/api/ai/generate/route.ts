@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { generateAIObject, isAIConfigured } from '@/lib/ai/provider';
 import { getOptionKey } from '@/lib/utils/question.utils';
 
+export const dynamic = 'force-dynamic';
+
 const questionSchema = z.object({
   stem: z.string(),
   options: z

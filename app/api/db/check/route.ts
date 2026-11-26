@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { checkConnection } from '@/lib/db/mongodb';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     if (!process.env.MONGODB_URI) {

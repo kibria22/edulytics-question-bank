@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyPassword } from '@/lib/auth/password';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
