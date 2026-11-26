@@ -62,6 +62,7 @@ export interface PaperConfig {
   dueDate?: string;
   
   boardId?: string;
+  versionId?: string;
   classId?: string;
   groupId?: string;
   subjectId?: string;

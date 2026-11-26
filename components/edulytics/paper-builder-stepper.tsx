@@ -41,6 +41,7 @@ export function PaperBuilderStepper({
   const { t, language } = useI18n();
   const [currentStep, setCurrentStep] = useState(1);
   const [boards, setBoards] = useState<CurriculumNode[]>([]);
+  const [versions, setVersions] = useState<CurriculumNode[]>([]);
   const [classes, setClasses] = useState<CurriculumNode[]>([]);
   const [groups, setGroups] = useState<CurriculumNode[]>([]);
   const [subjects, setSubjects] = useState<CurriculumNode[]>([]);
@@ -51,8 +52,12 @@ export function PaperBuilderStepper({
   }, []);
 
   useEffect(() => {
-    if (config.boardId) loadClasses(config.boardId);
+    if (config.boardId) loadVersions(config.boardId);
   }, [config.boardId]);
+
+  useEffect(() => {
+    if (config.versionId) loadClasses(config.versionId);
+  }, [config.versionId]);
 
   useEffect(() => {
     if (config.classId) loadGroups(config.classId);
@@ -70,9 +75,48 @@ export function PaperBuilderStepper({
     try {
       const res = await fetch('/api/curriculum/root');
       const data = await res.json();
-      setBoards(data.boards || []);
+      // Get country node first
+      if (data.nodes && data.nodes.length > 0) {
+        const countryId = data.nodes[0]._id;
+        // Load boards as children of country
+        const boardRes = await fetch(`/api/curriculum/children?parentId=${countryId}`);
+        const boardData = await boardRes.json();
+        const boardNodes = (boardData.nodes || []).map((node: any) => ({
+          _id: node._id,
+          name: node.name.en,
+          nameBn: node.name.bn,
+        }));
+        setBoards(boardNodes);
+      }
     } catch (error) {
       console.error('Error loading boards:', error);
+    }
+  };
+
+  const loadVersions = async (parentId: string) => {
+    try {
+      const res = await fetch(`/api/curriculum/children?parentId=${parentId}`);
+      const data = await res.json();
+      const versionNodes = (data.nodes || []).map((node: any) => ({
+        _id: node._id,
+        name: node.name.en,
+        nameBn: node.name.bn,
+      }));
+      setVersions(versionNodes);
+      
+      // Auto-select version matching paper language
+      if (versionNodes.length > 0 && !config.versionId) {
+        const matchingVersion = versionNodes.find((v: CurriculumNode) =>
+          config.paperLanguage === 'bn' 
+            ? v.name.includes('Bangla') || v.nameBn?.includes('বাংলা')
+            : v.name.includes('English')
+        );
+        if (matchingVersion) {
+          onChange({ ...config, versionId: matchingVersion._id });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading versions:', error);
     }
   };
 
@@ -80,7 +124,12 @@ export function PaperBuilderStepper({
     try {
       const res = await fetch(`/api/curriculum/children?parentId=${parentId}`);
       const data = await res.json();
-      setClasses(data.children || []);
+      const classNodes = (data.nodes || []).map((node: any) => ({
+        _id: node._id,
+        name: node.name.en,
+        nameBn: node.name.bn,
+      }));
+      setClasses(classNodes);
     } catch (error) {
       console.error('Error loading classes:', error);
     }
@@ -90,7 +139,12 @@ export function PaperBuilderStepper({
     try {
       const res = await fetch(`/api/curriculum/children?parentId=${parentId}`);
       const data = await res.json();
-      setGroups(data.children || []);
+      const groupNodes = (data.nodes || []).map((node: any) => ({
+        _id: node._id,
+        name: node.name.en,
+        nameBn: node.name.bn,
+      }));
+      setGroups(groupNodes);
     } catch (error) {
       console.error('Error loading groups:', error);
     }
@@ -100,7 +154,12 @@ export function PaperBuilderStepper({
     try {
       const res = await fetch(`/api/curriculum/children?parentId=${parentId}`);
       const data = await res.json();
-      setSubjects(data.children || []);
+      const subjectNodes = (data.nodes || []).map((node: any) => ({
+        _id: node._id,
+        name: node.name.en,
+        nameBn: node.name.bn,
+      }));
+      setSubjects(subjectNodes);
     } catch (error) {
       console.error('Error loading subjects:', error);
     }
@@ -110,7 +169,12 @@ export function PaperBuilderStepper({
     try {
       const res = await fetch(`/api/curriculum/children?parentId=${parentId}`);
       const data = await res.json();
-      setChapters(data.children || []);
+      const chapterNodes = (data.nodes || []).map((node: any) => ({
+        _id: node._id,
+        name: node.name.en,
+        nameBn: node.name.bn,
+      }));
+      setChapters(chapterNodes);
     } catch (error) {
       console.error('Error loading chapters:', error);
     }
@@ -144,7 +208,9 @@ export function PaperBuilderStepper({
   };
 
   const selectedBoard = boards.find(b => b._id === config.boardId);
+  const selectedVersion = versions.find(v => v._id === config.versionId);
   const selectedClass = classes.find(c => c._id === config.classId);
+  const selectedGroup = groups.find(g => g._id === config.groupId);
   const selectedSubject = subjects.find(s => s._id === config.subjectId);
 
   const step2Summary = selectedClass && selectedSubject
@@ -350,7 +416,7 @@ export function PaperBuilderStepper({
                 <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
                   {t('paperBuilder.board')}
                 </Label>
-                <Select value={config.boardId} onValueChange={(val) => onChange({ ...config, boardId: val || undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
+                <Select value={config.boardId} onValueChange={(val) => onChange({ ...config, boardId: val || undefined, versionId: undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder={t('paperBuilder.selectBoard')} />
                   </SelectTrigger>
@@ -364,7 +430,27 @@ export function PaperBuilderStepper({
                 </Select>
               </div>
 
-              {config.boardId && (
+              {config.boardId && versions.length > 0 && (
+                <div className="space-y-2">
+                  <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
+                    Version / Medium
+                  </Label>
+                  <Select value={config.versionId} onValueChange={(val) => onChange({ ...config, versionId: val || undefined, classId: undefined, groupId: undefined, subjectId: undefined })}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select Version" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {versions.map(version => (
+                        <SelectItem key={version._id} value={version._id} className="font-bengali">
+                          {version.nameBn || version.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {config.versionId && (
                 <div className="space-y-2">
                   <Label className={cn("text-xs font-semibold text-edulytics-text", language === 'bn' && 'font-bengali')}>
                     {t('paperBuilder.class')}
