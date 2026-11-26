@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { PaperBuilderStepper } from '@/components/edulytics/paper-builder-stepper';
-import { PaperPreview } from '@/components/edulytics/paper-preview';
+import { PaperPreviewWithTabs } from '@/components/edulytics/paper-preview-with-tabs';
 import { Question } from '@/lib/types';
 
 // Helper to get default section titles based on paper language
@@ -251,7 +251,7 @@ export default function PaperBuilderPage() {
 
         {/* Right Panel - Live Preview */}
         <div className="flex-1 overflow-y-auto">
-          <PaperPreview
+          <PaperPreviewWithTabs
             config={config}
             onSwapQuestion={swapQuestion}
             onReorderQuestions={reorderQuestions}
