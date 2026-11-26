@@ -22,6 +22,7 @@ export default function QuestionsPage() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [showAnswers, setShowAnswers] = useState(false);
 
   useEffect(() => {
     loadQuestions();
@@ -83,10 +84,20 @@ export default function QuestionsPage() {
         title="Question Bank"
         description="View and manage all questions offered across this school"
         action={
-          <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Question
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant={showAnswers ? "default" : "outline"}
+              onClick={() => setShowAnswers(!showAnswers)}
+              className={showAnswers ? "bg-green-600 hover:bg-green-700" : ""}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              {showAnswers ? "Hide Answers" : "Show Answers"}
+            </Button>
+            <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Question
+            </Button>
+          </div>
         }
       />
 
