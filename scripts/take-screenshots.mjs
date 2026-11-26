@@ -1,48 +1,69 @@
-import { chromium } from 'playwright';
-import { resolve } from 'path';
+import { chromium } from '@playwright/test';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-const baseURL = 'http://localhost:43765';
-const outputDir = '/opt/cursor/artifacts';
-
-const tabs = [
-  { path: '/curriculum', name: 'curriculum-browser' },
-  { path: '/questions', name: 'question-bank' },
-  { path: '/editor', name: 'question-editor' },
-  { path: '/ai-generator', name: 'ai-generator' },
-  { path: '/solutions', name: 'solutions-hints' },
-  { path: '/paper-builder', name: 'paper-builder' },
-  { path: '/sources', name: 'sources' },
-];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function takeScreenshots() {
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  const context = await browser.newContext({
+    viewport: { width: 1920, height: 1080 },
+  });
+  const page = await context.newPage();
 
-  console.log('Taking screenshots of all 7 tabs...\n');
+  try {
+    // Set up demo mode (skip authentication)
+    await page.goto('http://localhost:3000');
+    await page.evaluate(() => {
+      localStorage.setItem('app_authenticated', 'true');
+    });
 
-  for (const tab of tabs) {
-    const url = `${baseURL}${tab.path}`;
-    console.log(`Navigating to ${url}...`);
-    
-    await page.goto(url, { waitUntil: 'networkidle' });
-    
-    // Wait for content to load
-    await page.waitForSelector('main', { timeout: 10000 });
-    
-    // Additional wait for dynamic content and fonts
+    // Take Dashboard screenshot
+    console.log('Taking Dashboard screenshot...');
+    await page.goto('http://localhost:3000/curriculum', { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
-    
-    const screenshotPath = resolve(outputDir, `${tab.name}.png`);
-    await page.screenshot({ path: screenshotPath, fullPage: false });
-    
-    console.log(`✓ Screenshot saved: ${screenshotPath}`);
-  }
+    await page.screenshot({
+      path: '/opt/cursor/artifacts/dashboard-with-filters.png',
+      fullPage: true,
+    });
+    console.log('Dashboard screenshot saved');
 
-  await browser.close();
-  console.log('\nAll screenshots completed!');
+    // Take Question Bank screenshot
+    console.log('Taking Question Bank screenshot...');
+    await page.goto('http://localhost:3000/questions', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(2000);
+    await page.screenshot({
+      path: '/opt/cursor/artifacts/question-bank-with-filters.png',
+      fullPage: true,
+    });
+    console.log('Question Bank screenshot saved');
+
+    // Take Paper Builder screenshot
+    console.log('Taking Paper Builder screenshot...');
+    await page.goto('http://localhost:3000/paper-builder', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(2000);
+    await page.screenshot({
+      path: '/opt/cursor/artifacts/paper-builder-with-filters.png',
+      fullPage: true,
+    });
+    console.log('Paper Builder screenshot saved');
+
+    // Take Paper Builder with question picker
+    console.log('Taking Paper Builder question picker screenshot...');
+    await page.click('button:has-text("Pick Questions")');
+    await page.waitForTimeout(2000);
+    await page.screenshot({
+      path: '/opt/cursor/artifacts/paper-builder-question-picker.png',
+      fullPage: true,
+    });
+    console.log('Paper Builder question picker screenshot saved');
+
+  } catch (error) {
+    console.error('Error taking screenshots:', error);
+  } finally {
+    await browser.close();
+  }
 }
 
-takeScreenshots().catch((error) => {
-  console.error('Error taking screenshots:', error);
-  process.exit(1);
-});
+takeScreenshots().catch(console.error);

@@ -14,7 +14,6 @@ import {
   CheckCircle,
   TrendingUp,
   Download,
-  ChevronRight,
   Loader2,
 } from 'lucide-react';
 import {
@@ -37,6 +36,7 @@ interface DashboardStats {
     solutionCoverage: number;
     totalSources: number;
     topicCoverage: number;
+    languages: number;
   };
   typeDistribution: Record<string, number>;
   mcqKindDistribution: Record<string, number>;
@@ -67,141 +67,69 @@ interface DashboardStats {
   }>;
 }
 
-interface CurriculumNode {
-  _id: string;
-  type: string;
-  name: { bn: string; en: string };
-  code: string;
+interface CurriculumStructure {
+  countries: number;
+  boards: number;
+  versions: number;
+  classes: number;
+  groups: number;
+  subjects: number;
+  chapters: number;
+  topics: number;
 }
 
-const COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+const COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6'];
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [structure, setStructure] = useState<CurriculumStructure | null>(null);
+  const [curriculumData, setCurriculumData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [levelId, setLevelId] = useState<string>('');
-  const [subjectId, setSubjectId] = useState<string>('');
-  const [levels, setLevels] = useState<CurriculumNode[]>([]);
-  const [subjects, setSubjects] = useState<CurriculumNode[]>([]);
-  const [curriculumNodes, setCurriculumNodes] = useState<CurriculumNode[]>([]);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [curriculumGroupBy, setCurriculumGroupBy] = useState('board');
+  const [showStacked, setShowStacked] = useState(false);
 
   useEffect(() => {
-    loadStats();
-    loadLevels();
-    loadCurriculumRoot();
+    loadAll();
   }, []);
 
   useEffect(() => {
-    loadStats();
-  }, [levelId, subjectId]);
+    loadCurriculumData();
+  }, [curriculumGroupBy, showStacked]);
 
-  useEffect(() => {
-    if (levelId) {
-      loadSubjects(levelId);
-    } else {
-      setSubjects([]);
-      setSubjectId('');
-    }
-  }, [levelId]);
-
-  const loadStats = async () => {
+  const loadAll = async () => {
     try {
-      const params = new URLSearchParams();
-      if (levelId) params.append('levelId', levelId);
-      if (subjectId) params.append('subjectId', subjectId);
+      const [statsRes, structureRes] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/dashboard/curriculum-structure'),
+      ]);
 
-      const response = await fetch(`/api/dashboard/stats?${params}`);
-      const data = await response.json();
-      setStats(data);
+      const statsData = await statsRes.json();
+      const structureData = await structureRes.json();
+
+      setStats(statsData);
+      setStructure(structureData);
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadLevels = async () => {
+  const loadCurriculumData = async () => {
     try {
-      const response = await fetch('/api/curriculum/root');
-      const data = await response.json();
-      if (data.nodes && data.nodes.length > 0) {
-        const countryId = data.nodes[0]._id;
-        const boardResponse = await fetch(`/api/curriculum/children?parentId=${countryId}`);
-        const boardData = await boardResponse.json();
-        if (boardData.nodes && boardData.nodes.length > 0) {
-          const boardId = boardData.nodes[0]._id;
-          const versionResponse = await fetch(`/api/curriculum/children?parentId=${boardId}`);
-          const versionData = await versionResponse.json();
-          if (versionData.nodes && versionData.nodes.length > 0) {
-            const versionId = versionData.nodes[0]._id;
-            const levelResponse = await fetch(`/api/curriculum/children?parentId=${versionId}`);
-            const levelData = await levelResponse.json();
-            setLevels(levelData.nodes || []);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading levels:', error);
-    }
-  };
-
-  const loadSubjects = async (levelId: string) => {
-    try {
-      const groupResponse = await fetch(`/api/curriculum/children?parentId=${levelId}`);
-      const groupData = await groupResponse.json();
-      if (groupData.nodes && groupData.nodes.length > 0) {
-        const groupId = groupData.nodes[0]._id;
-        const subjectResponse = await fetch(`/api/curriculum/children?parentId=${groupId}`);
-        const subjectData = await subjectResponse.json();
-        setSubjects(subjectData.nodes || []);
-      }
-    } catch (error) {
-      console.error('Error loading subjects:', error);
-    }
-  };
-
-  const loadCurriculumRoot = async () => {
-    try {
-      const response = await fetch('/api/curriculum/root');
-      const data = await response.json();
-      setCurriculumNodes(data.nodes || []);
-    } catch (error) {
-      console.error('Error loading curriculum:', error);
-    }
-  };
-
-  const loadChildren = async (parentId: string) => {
-    try {
-      const response = await fetch(`/api/curriculum/children?parentId=${parentId}`);
-      const data = await response.json();
-      return data.nodes || [];
-    } catch (error) {
-      console.error('Error loading children:', error);
-      return [];
-    }
-  };
-
-  const toggleNode = async (nodeId: string) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-    } else {
-      newExpanded.add(nodeId);
-      const children = await loadChildren(nodeId);
-      setCurriculumNodes(prev => {
-        const updated = [...prev];
-        const index = updated.findIndex(n => n._id === nodeId);
-        if (index !== -1) {
-          updated.splice(index + 1, 0, ...children);
-        }
-        return updated;
+      const params = new URLSearchParams({
+        groupBy: curriculumGroupBy,
+        stacked: showStacked.toString(),
       });
+      const response = await fetch(`/api/dashboard/questions-by-curriculum?${params}`);
+      const data = await response.json();
+      setCurriculumData(data.data || []);
+    } catch (error) {
+      console.error('Error loading curriculum data:', error);
     }
-    setExpandedNodes(newExpanded);
   };
 
-  if (loading || !stats) {
+  if (loading || !stats || !structure) {
     return (
       <AppShell>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -212,12 +140,7 @@ export default function DashboardPage() {
   }
 
   const typeData = Object.entries(stats.typeDistribution).map(([name, value]) => ({
-    name: name.toUpperCase(),
-    value,
-  }));
-
-  const mcqKindData = Object.entries(stats.mcqKindDistribution).map(([name, value]) => ({
-    name: name.replace('_', ' '),
+    name: name === 'cq' ? 'CQ' : name === 'mcq' ? 'MCQ' : name === 'sq' ? 'SQ' : name.toUpperCase(),
     value,
   }));
 
@@ -227,198 +150,227 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Overview of your question bank and curriculum"
         action={
-          <Button className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
-            <Download className="h-4 w-4 mr-2" />
+          <Button size="sm" className="bg-edulytics-primary hover:bg-edulytics-primary/90 text-white">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
             Export Report
           </Button>
         }
       />
 
-      {/* Global Filters */}
-      <div className="mb-6 flex gap-3">
-        <Select value={levelId} onValueChange={(val) => setLevelId(val || '')}>
-          <SelectTrigger className="w-48 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="All Classes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Classes</SelectItem>
-            {levels.map((level) => (
-              <SelectItem key={level._id} value={level._id}>
-                {level.name.en}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={subjectId} onValueChange={(val) => setSubjectId(val || '')} disabled={!levelId}>
-          <SelectTrigger className="w-48 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="All Subjects" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Subjects</SelectItem>
-            {subjects.map((subject) => (
-              <SelectItem key={subject._id} value={subject._id}>
-                {subject.name.en}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <ContentCard className="bg-blue-50 border-blue-100">
-          <div className="flex items-start justify-between">
+      {/* KPI Cards - Compact */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <ContentCard className="bg-blue-50 border-blue-100 p-3">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-edulytics-muted mb-1">Total Questions</div>
-              <div className="text-2xl font-bold text-edulytics-text">
-                {stats.kpis.totalQuestions}
-              </div>
+              <div className="text-[10px] text-edulytics-muted uppercase tracking-wide mb-0.5">Total Questions</div>
+              <div className="text-xl font-bold text-edulytics-text">{stats.kpis.totalQuestions}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-blue-600" />
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-blue-600" />
             </div>
           </div>
         </ContentCard>
 
-        <ContentCard className="bg-green-50 border-green-100">
-          <div className="flex items-start justify-between">
+        <ContentCard className="bg-green-50 border-green-100 p-3">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-edulytics-muted mb-1">Solution Coverage</div>
-              <div className="text-2xl font-bold text-edulytics-text">
-                {stats.kpis.solutionCoverage}%
-              </div>
+              <div className="text-[10px] text-edulytics-muted uppercase tracking-wide mb-0.5">Solution Coverage</div>
+              <div className="text-xl font-bold text-edulytics-text">{stats.kpis.solutionCoverage}%</div>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-green-600" />
             </div>
           </div>
         </ContentCard>
 
-        <ContentCard className="bg-purple-50 border-purple-100">
-          <div className="flex items-start justify-between">
+        <ContentCard className="bg-purple-50 border-purple-100 p-3">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-edulytics-muted mb-1">Total Sources</div>
-              <div className="text-2xl font-bold text-edulytics-text">
-                {stats.kpis.totalSources}
-              </div>
+              <div className="text-[10px] text-edulytics-muted uppercase tracking-wide mb-0.5">Total Sources</div>
+              <div className="text-xl font-bold text-edulytics-text">{stats.kpis.totalSources}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Database className="w-5 h-5 text-purple-600" />
+            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+              <Database className="w-4 h-4 text-purple-600" />
             </div>
           </div>
         </ContentCard>
 
-        <ContentCard className="bg-amber-50 border-amber-100">
-          <div className="flex items-start justify-between">
+        <ContentCard className="bg-amber-50 border-amber-100 p-3">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-edulytics-muted mb-1">Topics Covered</div>
-              <div className="text-2xl font-bold text-edulytics-text">
-                {stats.kpis.topicCoverage}%
-              </div>
+              <div className="text-[10px] text-edulytics-muted uppercase tracking-wide mb-0.5">Topics Covered</div>
+              <div className="text-xl font-bold text-edulytics-text">{stats.kpis.topicCoverage}%</div>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-amber-600" />
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-amber-600" />
+            </div>
+          </div>
+        </ContentCard>
+
+        <ContentCard className="bg-pink-50 border-pink-100 p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[10px] text-edulytics-muted uppercase tracking-wide mb-0.5">Languages</div>
+              <div className="text-xl font-bold text-edulytics-text">{stats.kpis.languages}</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-pink-600" />
             </div>
           </div>
         </ContentCard>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Questions by Type */}
-        <ContentCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Questions by Type</h3>
+      {/* Curriculum Structure */}
+      <ContentCard className="mb-4">
+        <h3 className="font-bold text-sm text-edulytics-text mb-3">Curriculum Structure</h3>
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+          <div className="bg-blue-50 border border-blue-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Countries</div>
+            <div className="text-lg font-bold text-blue-700">{structure.countries}</div>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <div className="bg-purple-50 border border-purple-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Boards</div>
+            <div className="text-lg font-bold text-purple-700">{structure.boards}</div>
+          </div>
+          <div className="bg-pink-50 border border-pink-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Versions</div>
+            <div className="text-lg font-bold text-pink-700">{structure.versions}</div>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Classes</div>
+            <div className="text-lg font-bold text-green-700">{structure.classes}</div>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Groups</div>
+            <div className="text-lg font-bold text-yellow-700">{structure.groups}</div>
+          </div>
+          <div className="bg-cyan-50 border border-cyan-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Subjects</div>
+            <div className="text-lg font-bold text-cyan-700">{structure.subjects}</div>
+          </div>
+          <div className="bg-indigo-50 border border-indigo-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Chapters</div>
+            <div className="text-lg font-bold text-indigo-700">{structure.chapters}</div>
+          </div>
+          <div className="bg-teal-50 border border-teal-200 rounded p-2 text-center">
+            <div className="text-[10px] text-edulytics-muted uppercase mb-0.5">Topics</div>
+            <div className="text-lg font-bold text-teal-700">{structure.topics}</div>
+          </div>
+        </div>
+      </ContentCard>
+
+      {/* Charts Grid - 2 Column */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        {/* Questions by Type - Compact Donut */}
+        <ContentCard className="h-[240px]">
+          <h3 className="font-bold text-sm text-edulytics-text mb-2">Questions by Type</h3>
+          <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
                 data={typeData}
-                cx="50%"
+                cx="30%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={90}
+                innerRadius={35}
+                outerRadius={60}
                 fill="#8884d8"
-                paddingAngle={5}
+                paddingAngle={2}
                 dataKey="value"
-                label={(entry) => `${entry.name}: ${entry.value}`}
               >
                 {typeData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
+              <Legend 
+                layout="vertical" 
+                align="right" 
+                verticalAlign="middle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: '11px', paddingLeft: '10px' }}
+              />
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </ContentCard>
 
-        {/* MCQ Kind Distribution */}
-        {Object.keys(stats.mcqKindDistribution).length > 0 && (
-          <ContentCard>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-sm text-edulytics-text">MCQ Kind Breakdown</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={mcqKindData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={(entry) => `${entry.name}: ${entry.value}`}
+        {/* Questions by Curriculum - Switchable */}
+        <ContentCard className="h-[240px]">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-sm text-edulytics-text">Questions by Curriculum</h3>
+            <div className="flex gap-1">
+              <Select value={curriculumGroupBy} onValueChange={(val) => val && setCurriculumGroupBy(val)}>
+                <SelectTrigger className="h-6 text-[10px] border-edulytics-border w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="board">Board</SelectItem>
+                  <SelectItem value="version">Version</SelectItem>
+                  <SelectItem value="level">Class</SelectItem>
+                  <SelectItem value="group">Group</SelectItem>
+                  <SelectItem value="subject">Subject</SelectItem>
+                  <SelectItem value="chapter">Chapter</SelectItem>
+                  <SelectItem value="type">Type</SelectItem>
+                  <SelectItem value="language">Language</SelectItem>
+                </SelectContent>
+              </Select>
+              {curriculumGroupBy !== 'type' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowStacked(!showStacked)}
+                  className="h-6 px-2 text-[10px]"
                 >
-                  {mcqKindData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </ContentCard>
-        )}
-      </div>
-
-      {/* Questions by Chapter */}
-      {stats.chapterDistribution.length > 0 && (
-        <ContentCard className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Questions by Chapter</h3>
+                  {showStacked ? 'Simple' : 'Stacked'}
+                </Button>
+              )}
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats.chapterDistribution}>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart 
+              data={curriculumData.slice(0, 10)} 
+              layout={curriculumData.length > 5 && curriculumData[0]?.nameBn ? 'horizontal' : 'vertical'}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={100} />
-              <YAxis tick={{ fontSize: 12 }} />
+              {curriculumData.length > 5 && curriculumData[0]?.nameBn ? (
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
+              ) : (
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
+              )}
+              {curriculumData.length > 5 && curriculumData[0]?.nameBn ? (
+                <XAxis type="number" tick={{ fontSize: 10 }} />
+              ) : (
+                <YAxis tick={{ fontSize: 10 }} />
+              )}
               <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                {stats.chapterDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={index === 0 ? '#1e40af' : '#3b82f6'} />
-                ))}
-              </Bar>
+              {showStacked && curriculumGroupBy !== 'type' ? (
+                <>
+                  <Legend iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
+                  <Bar dataKey="MCQ" stackId="a" fill="#3b82f6" maxBarSize={30} />
+                  <Bar dataKey="CQ" stackId="a" fill="#8b5cf6" maxBarSize={30} />
+                  <Bar dataKey="SQ" stackId="a" fill="#06b6d4" maxBarSize={30} />
+                </>
+              ) : (
+                <Bar dataKey="count" fill="#3b82f6" maxBarSize={35}>
+                  {curriculumData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index === 0 ? '#1e40af' : '#3b82f6'} />
+                  ))}
+                </Bar>
+              )}
             </BarChart>
           </ResponsiveContainer>
         </ContentCard>
-      )}
+      </div>
 
-      {/* Solution Stats and Source Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Solution Overview */}
-        <ContentCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Solutions Overview</h3>
-          </div>
-          <div className="space-y-3">
+      {/* Solutions and Sources - 2 Column */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <ContentCard className="h-[220px]">
+          <h3 className="font-bold text-sm text-edulytics-text mb-3">Solutions Overview</h3>
+          <div className="space-y-2.5">
             <div>
-              <div className="flex items-center justify-between text-xs mb-1">
+              <div className="flex items-center justify-between text-[10px] mb-1">
                 <span className="text-edulytics-muted">With Solution</span>
                 <span className="font-semibold text-edulytics-text">{stats.solutionStats.withSolution}</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500"
                   style={{
@@ -428,13 +380,13 @@ export default function DashboardPage() {
               </div>
             </div>
             <div>
-              <div className="flex items-center justify-between text-xs mb-1">
+              <div className="flex items-center justify-between text-[10px] mb-1">
                 <span className="text-edulytics-muted">Without Solution</span>
                 <span className="font-semibold text-edulytics-text">{stats.solutionStats.withoutSolution}</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-red-500"
+                  className="h-full bg-amber-500"
                   style={{
                     width: `${stats.kpis.totalQuestions > 0 ? (stats.solutionStats.withoutSolution / stats.kpis.totalQuestions) * 100 : 0}%`,
                   }}
@@ -442,11 +394,11 @@ export default function DashboardPage() {
               </div>
             </div>
             <div>
-              <div className="flex items-center justify-between text-xs mb-1">
+              <div className="flex items-center justify-between text-[10px] mb-1">
                 <span className="text-edulytics-muted">With Media</span>
                 <span className="font-semibold text-edulytics-text">{stats.solutionStats.withMedia}</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500"
                   style={{
@@ -458,19 +410,16 @@ export default function DashboardPage() {
           </div>
         </ContentCard>
 
-        {/* Source Type Distribution */}
-        <ContentCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Sources by Type</h3>
-          </div>
-          <div className="space-y-3">
+        <ContentCard className="h-[220px]">
+          <h3 className="font-bold text-sm text-edulytics-text mb-3">Sources by Type</h3>
+          <div className="space-y-2.5">
             {stats.sourceTypeDistribution.slice(0, 5).map((source, index) => (
               <div key={index}>
-                <div className="flex items-center justify-between text-xs mb-1">
+                <div className="flex items-center justify-between text-[10px] mb-1">
                   <span className="text-edulytics-muted capitalize">{source.type.replace('_', ' ')}</span>
                   <span className="font-semibold text-edulytics-text">{source.count}</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full"
                     style={{
@@ -485,92 +434,27 @@ export default function DashboardPage() {
         </ContentCard>
       </div>
 
-      {/* Curriculum Stats and Recent Questions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Curriculum Structure */}
-        <ContentCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Curriculum Structure</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <div className="text-xs text-edulytics-muted mb-1">Classes</div>
-              <div className="text-xl font-bold text-blue-700">{stats.curriculumCounts.classes}</div>
-            </div>
-            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
-              <div className="text-xs text-edulytics-muted mb-1">Subjects</div>
-              <div className="text-xl font-bold text-purple-700">{stats.curriculumCounts.subjects}</div>
-            </div>
-            <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-              <div className="text-xs text-edulytics-muted mb-1">Chapters</div>
-              <div className="text-xl font-bold text-green-700">{stats.curriculumCounts.chapters}</div>
-            </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-              <div className="text-xs text-edulytics-muted mb-1">Topics</div>
-              <div className="text-xl font-bold text-amber-700">{stats.curriculumCounts.topics}</div>
-            </div>
-          </div>
-        </ContentCard>
-
-        {/* Recent Additions */}
-        <ContentCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-edulytics-text">Recent Questions</h3>
-          </div>
-          <div className="space-y-2">
-            {stats.recentQuestions.map((question) => (
-              <div key={question._id.toString()} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-                <Badge variant="outline" className="text-xs mt-0.5">
-                  {question.type.toUpperCase()}
-                </Badge>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-edulytics-text truncate">{question.stem}</p>
-                  {question.difficulty && (
-                    <Badge className={`text-xs mt-1 ${
-                      question.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                      question.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {question.difficulty}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ContentCard>
-      </div>
-
-      {/* Curriculum Browser */}
+      {/* Recent Questions */}
       <ContentCard>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-sm text-edulytics-text">Curriculum Browser</h3>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs border-edulytics-border"
-            onClick={loadCurriculumRoot}
-          >
-            Refresh
-          </Button>
-        </div>
-        <div className="space-y-1">
-          {curriculumNodes.map((node) => (
-            <div
-              key={node._id}
-              className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
-              onClick={() => toggleNode(node._id)}
-            >
-              <ChevronRight
-                className={`w-4 h-4 text-edulytics-muted transition-transform ${
-                  expandedNodes.has(node._id) ? 'rotate-90' : ''
-                }`}
-              />
-              <BookOpen className="w-4 h-4 text-edulytics-muted" />
-              <span className="text-sm text-edulytics-text">{node.name.en}</span>
-              <Badge variant="outline" className="text-xs ml-auto">
-                {node.type}
+        <h3 className="font-bold text-sm text-edulytics-text mb-3">Recent Questions</h3>
+        <div className="space-y-1.5">
+          {stats.recentQuestions.map((question) => (
+            <div key={question._id.toString()} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
+              <Badge variant="outline" className="text-[10px] mt-0.5">
+                {question.type.toUpperCase()}
               </Badge>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-edulytics-text truncate">{question.stem}</p>
+                {question.difficulty && (
+                  <Badge className={`text-[10px] mt-1 ${
+                    question.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                    question.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {question.difficulty}
+                  </Badge>
+                )}
+              </div>
             </div>
           ))}
         </div>

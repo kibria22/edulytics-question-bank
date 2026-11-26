@@ -19,6 +19,7 @@ export interface QuestionFilterValues {
   type?: string;
   mcqKind?: string;
   difficulty?: string;
+  language?: string;
   levelId?: string;
   subjectId?: string;
   chapterId?: string;
@@ -204,6 +205,7 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
     if (values.type) active.push({ key: 'type', label: `Type: ${values.type.toUpperCase()}` });
     if (values.mcqKind) active.push({ key: 'mcqKind', label: `MCQ: ${values.mcqKind}` });
     if (values.difficulty) active.push({ key: 'difficulty', label: `Difficulty: ${values.difficulty}` });
+    if (values.language) active.push({ key: 'language', label: `Language: ${values.language === 'bn' ? 'Bangla' : values.language === 'en' ? 'English' : values.language}` });
     if (values.levelId) {
       const level = levels.find(l => l._id === values.levelId);
       if (level) active.push({ key: 'levelId', label: `Level: ${level.name.en}` });
@@ -233,16 +235,16 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
 
   return (
     <div className="bg-white border border-edulytics-border rounded-lg p-4 space-y-4">
-      {/* Primary Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-edulytics-muted" />
+      {/* Primary Filters - Compact Single Row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[220px] max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-edulytics-muted" />
           <Input
-            placeholder="Search questions (Bangla/English)..."
+            placeholder="Search questions..."
             value={values.search || ''}
             onChange={(e) => updateFilter('search', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-            className="pl-9 h-9 text-sm border-edulytics-border"
+            className="pl-8 h-8 text-xs border-edulytics-border"
           />
         </div>
 
@@ -250,8 +252,10 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.type || 'all'}
           onValueChange={(val) => updateFilter('type', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-32 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="Type" />
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
+            <SelectValue>
+              {values.type ? values.type.toUpperCase() : 'All Types'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -268,8 +272,10 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
             value={values.mcqKind || 'all'}
             onValueChange={(val) => updateFilter('mcqKind', val === 'all' ? undefined : val)}
           >
-            <SelectTrigger className="w-40 h-9 text-sm border-edulytics-border">
-              <SelectValue placeholder="MCQ Kind" />
+            <SelectTrigger className="w-32 h-8 text-xs border-edulytics-border">
+              <SelectValue>
+                {values.mcqKind ? values.mcqKind.replace('_', ' ') : 'All MCQ'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All MCQ</SelectItem>
@@ -286,11 +292,13 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           value={values.difficulty || 'all'}
           onValueChange={(val) => updateFilter('difficulty', val === 'all' ? undefined : val)}
         >
-          <SelectTrigger className="w-32 h-9 text-sm border-edulytics-border">
-            <SelectValue placeholder="Difficulty" />
+          <SelectTrigger className="w-28 h-8 text-xs border-edulytics-border">
+            <SelectValue>
+              {values.difficulty ? values.difficulty.charAt(0).toUpperCase() + values.difficulty.slice(1) : 'All Difficulty'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="all">All Difficulty</SelectItem>
             {filterOptions.difficulties.map((diff) => (
               <SelectItem key={diff} value={diff}>
                 {diff.charAt(0).toUpperCase() + diff.slice(1)}
@@ -299,38 +307,54 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           </SelectContent>
         </Select>
 
+        <Select
+          value={values.language || 'all'}
+          onValueChange={(val) => updateFilter('language', val === 'all' ? undefined : val)}
+        >
+          <SelectTrigger className="w-24 h-8 text-xs border-edulytics-border">
+            <SelectValue>
+              {values.language === 'bn' ? 'Bangla' : values.language === 'en' ? 'English' : 'All Languages'}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Languages</SelectItem>
+            <SelectItem value="bn">Bangla</SelectItem>
+            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="ar">Arabic</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Button
-          variant="outline"
           size="sm"
           onClick={onSearch}
-          className="h-9 border-edulytics-border bg-edulytics-primary text-white hover:bg-edulytics-primary/90"
+          className="h-8 px-3 text-xs bg-edulytics-primary text-white hover:bg-edulytics-primary/90"
         >
-          <Search className="h-4 w-4 mr-1.5" />
+          <Search className="h-3.5 w-3.5 mr-1" />
           Search
         </Button>
       </div>
 
       {/* More Filters Toggle */}
       <Collapsible open={showMoreFilters} onOpenChange={setShowMoreFilters}>
-        <CollapsibleTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 px-3 text-edulytics-muted hover:text-edulytics-text">
-          <Filter className="h-3 w-3 mr-1.5" />
-          {showMoreFilters ? 'Hide' : 'Show'} More Filters
-          <ChevronDown className={`h-3 w-3 ml-1.5 transition-transform ${showMoreFilters ? 'rotate-180' : ''}`} />
+        <CollapsibleTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium transition-colors hover:bg-gray-50 h-7 px-2 text-edulytics-muted hover:text-edulytics-text">
+          <Filter className="h-3 w-3 mr-1" />
+          {showMoreFilters ? 'Less' : 'More'} Filters
+          <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${showMoreFilters ? 'rotate-180' : ''}`} />
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 mt-4 pt-4 border-t border-edulytics-border">
+        <CollapsibleContent className="space-y-3 mt-3 pt-3 border-t border-edulytics-border">
           {/* Curriculum Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Class/Level</Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Class</Label>
               <Select
                 value={values.levelId || 'all'}
                 onValueChange={(val) => updateFilter('levelId', val === 'all' ? undefined : val)}
               >
-                <SelectTrigger className="h-9 text-sm border-edulytics-border">
-                  <SelectValue placeholder="Select level" />
+                <SelectTrigger className="h-8 text-xs border-edulytics-border">
+                  <SelectValue>{values.levelId ? levels.find(l => l._id === values.levelId)?.name.en : 'All Classes'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="all">All Classes</SelectItem>
                   {levels.map((level) => (
                     <SelectItem key={level._id} value={level._id}>
                       {level.name.en}
@@ -340,15 +364,15 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Subject</Label>
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Subject</Label>
               <Select
                 value={values.subjectId || 'all'}
                 onValueChange={(val) => updateFilter('subjectId', val === 'all' ? undefined : val)}
                 disabled={!values.levelId}
               >
-                <SelectTrigger className="h-9 text-sm border-edulytics-border">
-                  <SelectValue placeholder="Select subject" />
+                <SelectTrigger className="h-8 text-xs border-edulytics-border">
+                  <SelectValue>{values.subjectId ? subjects.find(s => s._id === values.subjectId)?.name.en : 'All Subjects'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Subjects</SelectItem>
@@ -361,15 +385,15 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Chapter</Label>
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Chapter</Label>
               <Select
                 value={values.chapterId || 'all'}
                 onValueChange={(val) => updateFilter('chapterId', val === 'all' ? undefined : val)}
                 disabled={!values.subjectId}
               >
-                <SelectTrigger className="h-9 text-sm border-edulytics-border">
-                  <SelectValue placeholder="Select chapter" />
+                <SelectTrigger className="h-8 text-xs border-edulytics-border">
+                  <SelectValue>{values.chapterId ? chapters.find(c => c._id === values.chapterId)?.name.en : 'All Chapters'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Chapters</SelectItem>
@@ -382,15 +406,15 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Topic</Label>
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Topic</Label>
               <Select
                 value={values.topicId || 'all'}
                 onValueChange={(val) => updateFilter('topicId', val === 'all' ? undefined : val)}
                 disabled={!values.chapterId}
               >
-                <SelectTrigger className="h-9 text-sm border-edulytics-border">
-                  <SelectValue placeholder="Select topic" />
+                <SelectTrigger className="h-8 text-xs border-edulytics-border">
+                  <SelectValue>{values.topicId ? topics.find(t => t._id === values.topicId)?.name.en : 'All Topics'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Topics</SelectItem>
@@ -405,15 +429,15 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
           </div>
 
           {/* Source & Marks Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Source Type</Label>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Source</Label>
               <Select
                 value={values.sourceType || 'all'}
                 onValueChange={(val) => updateFilter('sourceType', val === 'all' ? undefined : val)}
               >
-                <SelectTrigger className="h-9 text-sm border-edulytics-border">
-                  <SelectValue placeholder="Select source" />
+                <SelectTrigger className="h-8 text-xs border-edulytics-border">
+                  <SelectValue>{values.sourceType ? values.sourceType.replace('_', ' ') : 'All Sources'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
@@ -426,27 +450,27 @@ export function QuestionFilters({ values, onChange, onSearch, resultCount }: Que
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Min Marks</Label>
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Min Marks</Label>
               <Input
                 type="number"
                 min="0"
                 placeholder="0"
                 value={values.minMarks || ''}
                 onChange={(e) => updateFilter('minMarks', e.target.value || undefined)}
-                className="h-9 text-sm border-edulytics-border"
+                className="h-8 text-xs border-edulytics-border"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-edulytics-text">Max Marks</Label>
+            <div>
+              <Label className="text-xs text-edulytics-muted mb-1 block">Max Marks</Label>
               <Input
                 type="number"
                 min="0"
                 placeholder="100"
                 value={values.maxMarks || ''}
                 onChange={(e) => updateFilter('maxMarks', e.target.value || undefined)}
-                className="h-9 text-sm border-edulytics-border"
+                className="h-8 text-xs border-edulytics-border"
               />
             </div>
           </div>

@@ -68,12 +68,15 @@ export async function GET(request: Request) {
       const totalTopics = seedData.curriculumNodes.filter(n => n.type === 'topic').length;
       const topicCoverage = totalTopics > 0 ? (topicsWithQuestions / totalTopics * 100).toFixed(1) : '0';
 
+      const languages = new Set(questions.map(q => q.language));
+
       return NextResponse.json({
         kpis: {
           totalQuestions,
           solutionCoverage: parseFloat(solutionCoverage),
           totalSources: seedData.sources.length,
           topicCoverage: parseFloat(topicCoverage),
+          languages: languages.size,
         },
         typeDistribution,
         mcqKindDistribution,
@@ -137,6 +140,7 @@ export async function GET(request: Request) {
       curriculumCounts,
       recentQuestions,
       questionsWithMedia,
+      languages,
     ]: [
       number,
       number,
@@ -150,6 +154,7 @@ export async function GET(request: Request) {
       { classes: number; subjects: number; chapters: number; topics: number },
       any[],
       number,
+      string[],
     ] = await Promise.all([
       questionsCollection.countDocuments(filter),
       questionsCollection.countDocuments({ ...filter, 'sources.0': { $exists: true } }),
@@ -207,6 +212,7 @@ export async function GET(request: Request) {
       })(),
       questionsCollection.find(filter).sort({ createdAt: -1 }).limit(5).toArray(),
       questionsCollection.countDocuments({ ...filter, 'media.0': { $exists: true } }),
+      questionsCollection.distinct('language', filter),
     ]);
 
     const solutionCoverage = totalQuestions > 0 
@@ -219,6 +225,7 @@ export async function GET(request: Request) {
         solutionCoverage: parseFloat(solutionCoverage),
         totalSources,
         topicCoverage: parseFloat(topicStats.coverage),
+        languages: languages.length,
       },
       typeDistribution: typeDistribution.reduce((acc, item) => {
         acc[item._id] = item.count;

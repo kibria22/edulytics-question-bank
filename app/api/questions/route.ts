@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const type = url.searchParams.get('type');
     const mcqKind = url.searchParams.get('mcqKind');
     const difficulty = url.searchParams.get('difficulty');
+    const language = url.searchParams.get('language');
     const search = url.searchParams.get('search');
     const levelId = url.searchParams.get('levelId');
     const subjectId = url.searchParams.get('subjectId');
@@ -40,6 +41,10 @@ export async function GET(request: Request) {
 
       if (difficulty) {
         questions = questions.filter((q: any) => q.difficulty === difficulty);
+      }
+
+      if (language) {
+        questions = questions.filter((q: any) => q.language === language);
       }
 
       if (levelId) {
@@ -128,6 +133,10 @@ export async function GET(request: Request) {
 
     if (difficulty) {
       filter.difficulty = difficulty;
+    }
+
+    if (language) {
+      filter.language = language;
     }
 
     if (levelId) {
