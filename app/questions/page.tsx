@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { PageHeader } from '@/components/edulytics/page-header';
@@ -25,7 +25,7 @@ interface DefaultFilters {
   subjectId: string;
 }
 
-export default function QuestionsPage() {
+function QuestionsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -64,7 +64,13 @@ export default function QuestionsPage() {
       // Load from URL
       const filters: QuestionFilterValues = {};
       searchParams.forEach((value, key) => {
-        filters[key as keyof QuestionFilterValues] = value;
+        const filterKey = key as keyof QuestionFilterValues;
+        // Handle different value types
+        if (filterKey === 'hasSolution' || filterKey === 'hasMedia') {
+          (filters as any)[filterKey] = value === 'true';
+        } else {
+          (filters as any)[filterKey] = value;
+        }
       });
       setFilterValues(filters);
     }
@@ -168,6 +174,7 @@ export default function QuestionsPage() {
 
   const handleFilterChange = (newFilters: QuestionFilterValues) => {
     setFilterValues(newFilters);
+    updateUrlParams(newFilters);
   };
 
   const renderMarkdown = (text: string) => {
@@ -454,5 +461,19 @@ export default function QuestionsPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+export default function QuestionsPage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="h-8 w-8 animate-spin text-edulytics-primary" />
+        </div>
+      </AppShell>
+    }>
+      <QuestionsPageContent />
+    </Suspense>
   );
 }

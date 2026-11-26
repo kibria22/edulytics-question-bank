@@ -254,7 +254,7 @@ export function PaperPreview({ config, onSwapQuestion, onReorderQuestions }: Pre
                                   </div>
                                   
                                   {/* Multi-statement MCQ: show statements */}
-                                  {question.mcqKind === 'multi-statement' && question.statements && question.statements.length > 0 && (
+                                  {question.mcqKind === 'multi_statement' && question.statements && question.statements.length > 0 && (
                                     <div className="ml-4 mb-3 space-y-1">
                                       {question.statements.map((stmt, sIdx) => (
                                         <div key={sIdx} className="flex gap-2">

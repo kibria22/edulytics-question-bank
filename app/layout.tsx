@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Question bank management system with AI-powered question generation",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} antialiased`}>
       <head>
